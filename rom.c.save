@@ -9,21 +9,14 @@
 #define max(a,b) ((a) > (b) ? (a) : (b))
 #define min(a,b) ((a) < (b) ? (a) : (b))
 
-/* TODO
-
- - 2 (or more) Rom buffers
-
-*/
-
-
 //unsigned char *bytes;
 static int fd;
 static unsigned char *buf1;
-//static unsigned char *buf2;
-//unsigned int buf1h = 0;
-//unsigned int buf2h = 0;
+static unsigned char *buf2;
+unsigned int buf1h = 0;
+unsigned int buf2h = 0;
 unsigned int buf1lp = 0;
-//unsigned int buf2lp = 0;
+unsigned int buf2lp = 0;
 unsigned int mapper;
 
 static char *carts[] = {
@@ -96,9 +89,8 @@ static unsigned char header[] = {
 	0xBB, 0xBB, 0x67, 0x63, 0x6E, 0x0E, 0xEC, 0xCC,
 	0xDD, 0xDC, 0x99, 0x9F, 0xBB, 0xB9, 0x33, 0x3E
 };
-
 char k[21];
-
+unsigned int key;
 unsigned char inline rom_read_byte(unsigned short i)
 {
 	/*unsigned char byte;
@@ -109,7 +101,7 @@ unsigned char inline rom_read_byte(unsigned short i)
 	dclear();
 	sprintf(k,"t:%i", t2-t1);locate(1,5,k);
 	dupdate();*/
-	/*unsigned char notb=0;
+	unsigned char notb=0;
 	int lb;
 	if (i < buf1lp || i > (buf1lp+8192)) notb = 1;  // Not in buffer 1
 	if (i < buf2lp || i > (buf2lp+8192)) notb |= 2; // Not in buffer 2
@@ -135,15 +127,7 @@ unsigned char inline rom_read_byte(unsigned short i)
 			buf1h++;
 			return buf1[i-buf1lp];
 			break;
-	} 16384*/
-	int lb;
-	if (i < buf1lp || i > (buf1lp+20000)) {
-		lb = max(0,(i-(20000/2)));
-		if (((lb+20000)-32768) > 0) lb -= ((lb+20000)-32768);
-		BFile_Read(fd,buf1,20000,lb);
-		buf1lp = lb;
-	}
-	return buf1[i-buf1lp];
+	}                  
 }
 
 static int rom_init()
@@ -218,7 +202,7 @@ static int rom_init()
 		return 0;
 
 	dupdate();
-	getkey();
+	getkey(&key);
 	dclear();
 
 	//bytes = rombytes;
@@ -273,8 +257,6 @@ unsigned int rom_get_mapper(void)
 	return mapper;
 }
 
-/* Shameless copy from EDIT's source code */
-
 uint16_t *Char2Font(char *sChar, uint16_t *sFont)
 {
   int i=0;
@@ -305,8 +287,6 @@ uint16_t *FilePath(char *sRoot,char *sFolder, char *sFile,uint16_t *sFont)
   return(sFont);
 }
 
-/* End of shameless copy */
-
 int rom_load(const char *filename)
 {
 	uint16_t sFont[64];
@@ -316,10 +296,13 @@ int rom_load(const char *filename)
 	if(fd < 0)
 		return 0;
 
-	buf1 = calloc(1, 20000); //16384
-	//buf2 = calloc(1, 8192);
-	BFile_Read(fd,buf1,20000,0);
+	buf1 = (unsigned char*)calloc(1, 8192);
+	buf2 = (unsigned char*)calloc(1, 8192);
+
 	buf1lp = 0;
+	buf2lp = 8192;
+	BFile_Read(fd,buf1,8192,0);
+	BFile_Read(fd,buf2,8192,8192);
 
 	//bytes = (unsigned char*)malloc(32768);
 
@@ -336,7 +319,6 @@ int rom_load(const char *filename)
 void rom_close()
 {
 	BFile_Close(fd);
-	free(buf1);
 }
 
 /*unsigned char *rom_getbytes(void)

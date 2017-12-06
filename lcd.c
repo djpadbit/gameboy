@@ -3,6 +3,8 @@
 #include "interrupt.h"
 #include "sdl.h"
 #include "mem.h"
+#include <display.h>
+#include "disp.h"
 
 static int lcd_line;
 static int lcd_ly_compare;
@@ -31,7 +33,21 @@ static int window_x, window_y;
 static int bgpalette[] = {3, 2, 1, 0};
 static int sprpalette1[] = {0, 1, 2, 3};
 static int sprpalette2[] = {0, 1, 2, 3};
-static unsigned long colours[4] = {0xFFFFFF, 0xC0C0C0, 0x808080, 0x000000};
+//static unsigned long colours[4] = {0xFFFFFF, 0xC0C0C0, 0x808080, 0x000000};
+static color_t colours[4] = {color_black,color_dark,color_light,color_white};
+
+static unsigned char scalearrx[160] = {0, 250, 1, 250, 2, 250, 3, 250, 250, 4, 250, 5, 250, 6, 250, 250, 7, 250, 8, 250, 9, 250, 10, 250, 250, 11, 250, 12, 250, 13, 250,
+                                       250, 14, 250, 15, 250, 16, 250, 17, 250, 250, 18, 250, 19, 250, 20, 250, 250, 21, 250, 22, 250, 23, 250, 24, 250, 250, 25, 250, 26, 250,
+                                       27, 250, 250, 28, 250, 29, 250, 30, 250, 31, 250, 250, 32, 250, 33, 250, 34, 250, 250, 35, 250, 36, 250, 37, 250, 38, 250, 250, 39, 250,
+                                       40, 250, 41, 250, 250, 42, 250, 43, 250, 44, 250, 45, 250, 250, 46, 250, 47, 250, 48, 250, 250, 49, 250, 50, 250, 51, 250, 52, 250, 250,
+                                       53, 250, 54, 250, 55, 250, 250, 56, 250, 57, 250, 58, 250, 59, 250, 250, 60, 250, 61, 250, 62, 250, 250, 63, 250, 64, 250, 65, 250, 66,
+                                       250, 250, 67, 250, 68, 250, 69, 250, 250};
+
+static unsigned char scalearry[144] = {0, 250, 1, 250, 2, 250, 3, 250, 250, 4, 250, 5, 250, 6, 250, 250, 7, 250, 8, 250, 9, 250, 10, 250, 250, 11, 250, 12, 250, 13, 250,
+                                       250, 14, 250, 15, 250, 16, 250, 17, 250, 250, 18, 250, 19, 250, 20, 250, 250, 21, 250, 22, 250, 23, 250, 24, 250, 250, 25, 250, 26, 250,
+                                       27, 250, 250, 28, 250, 29, 250, 30, 250, 31, 250, 250, 32, 250, 33, 250, 34, 250, 250, 35, 250, 36, 250, 37, 250, 38, 250, 250, 39, 250,
+                                       40, 250, 41, 250, 250, 42, 250, 43, 250, 44, 250, 45, 250, 250, 46, 250, 47, 250, 48, 250, 250, 49, 250, 50, 250, 51, 250, 52, 250, 250,
+                                       53, 250, 54, 250, 55, 250, 250, 56, 250, 57, 250, 58, 250, 59, 250, 250, 60, 250, 61, 250, 62, 250, 250};
 
 struct sprite {
 	int y, x, tile, flags;
@@ -149,8 +165,11 @@ static void sort_sprites(struct sprite *s, int n)
 	}
 	while(swapped);
 }
-
-static void draw_bg_and_window(unsigned int *b, int line)
+inline void sdpixel(unsigned char x, unsigned char y, color_t operator)
+{
+	if (scalearrx[x] != 250 && scalearry[y] != 250) dpixel(29+scalearrx[x],scalearry[y],operator);
+}
+static void draw_bg_and_window(int line)
 {
 	int x;
 
@@ -169,7 +188,10 @@ static void draw_bg_and_window(unsigned int *b, int line)
 		else {
 			if(!bg_enabled)
 			{
-				b[line*640 + x] = 0;
+				//b[line*640 + x] = 0;
+				//dpixel(x,line,color_white);
+				//if (scalearrx[x] != 250 && scalearry[line] != 250) dpixel(scalearrx[x],scalearry[line],color_white);
+				sdpixel(x,line,color_white);
 				return;
 			}
 			xm = (x + scroll_x)%256;
@@ -195,11 +217,15 @@ static void draw_bg_and_window(unsigned int *b, int line)
 		b2 = mem_get_raw(tile_addr+(ym%8)*2+1);
 		mask = 128>>(xm%8);
 		colour = (!!(b2&mask)<<1) | !!(b1&mask);
-		b[line*640 + x] = colours[bgpalette[colour]];
+		//b[line*640 + x] = colours[bgpalette[colour]];
+		//dpixel(x,line,bgpalette[colour] <= 2 ? color_black : color_white);
+		//if (scalearrx[x] != 250 && scalearry[line] != 250) dpixel(scalearrx[x],scalearry[line],bgpalette[colour] <= 2 ? color_black : color_white);
+		//sdpixel(x,line,colours[bgpalette[colour]]); //
+		sdpixel(x,line,bgpalette[colour] <= 2 ? color_white : color_black);
 	}
 }
 
-static void draw_sprites(unsigned int *b, int line, int nsprites, struct sprite *s)
+static void draw_sprites(int line, int nsprites, struct sprite *s)
 {
 	int i;
 
@@ -240,11 +266,23 @@ static void draw_sprites(unsigned int *b, int line, int nsprites, struct sprite 
 			/* Sprite is behind BG, only render over palette entry 0 */
 			if(s[i].flags & PRIO)
 			{
-				unsigned int temp = b[line*640+(x + s[i].x)];
-				if(temp != colours[bgpalette[0]])
+				//unsigned int temp = b[line*640+(x + s[i].x)];
+				unsigned int temp = 0;
+				if(x < 128 && line < 64) {
+					if (scalearrx[x] != 250 && scalearry[line] != 250) {
+						uint32_t *video	= display_getCurrentVRAM() + (line << 2) + ((x+29) >> 5);
+						uint32_t mask	= 0x80000000 >> ((x+29) & 31);
+						temp = *video & mask;
+					}
+				}
+				if(temp != bgpalette[0])
 					continue;
 			}
-			b[line*640+(x + s[i].x)] = colours[pal[colour]];
+			//b[line*640+(x + s[i].x)] = colours[pal[colour]];
+			//dpixel((x + s[i].x),line,pal[colour] <= 2 ? color_black : color_white);
+			//if (scalearrx[(x + s[i].x)] != 250 && scalearry[line] != 250) dpixel(scalearrx[(x + s[i].x)],scalearry[line],pal[colour] <= 2 ? color_black : color_white);
+			//sdpixel((x + s[i].x),line,colours[pal[colour]]);//pal[colour] <= 2 ? color_black : color_white);
+			sdpixel((x + s[i].x),line,pal[colour] <= 2 ? color_white : color_black);
 		}
 	}
 }
@@ -254,7 +292,7 @@ static void render_line(int line)
 	int i, c = 0;
 
 	struct sprite s[10];
-	unsigned int *b = sdl_get_framebuffer();
+	//unsigned int *b = sdl_get_framebuffer();
 
 	for(i = 0; i<40; i++)
 	{
@@ -278,47 +316,45 @@ static void render_line(int line)
 		sort_sprites(s, c);
 
 	/* Draw the background layer */
-	draw_bg_and_window(b, line);
+	draw_bg_and_window(line);
 
-	draw_sprites(b, line, c, s);
+	draw_sprites(line, c, s);
 
 
 }
-
+/*
 static void draw_stuff(void)
 {
 	unsigned int *b = sdl_get_framebuffer();
 	int y, tx, ty;
 
-	for(ty = 0; ty < 24; ty++)
-	{
-	for(tx = 0; tx < 16; tx++)
-	{
-	for(y = 0; y<8; y++)
-	{
-		unsigned char b1, b2;
-		int tileaddr = 0x8000 +  ty*0x100 + tx*16 + y*2;
+	for(ty = 0; ty < 24; ty++) {
+		for(tx = 0; tx < 16; tx++) {
+			for(y = 0; y<8; y++) {
+				unsigned char b1, b2;
+				int tileaddr = 0x8000 +  ty*0x100 + tx*16 + y*2;
 
-		b1 = mem_get_raw(tileaddr);
-		b2 = mem_get_raw(tileaddr+1);
-		b[(ty*640*8)+(tx*8) + (y*640) + 0 + 0x1F400] = colours[(!!(b1&0x80))<<1 | !!(b2&0x80)];
-		b[(ty*640*8)+(tx*8) + (y*640) + 1 + 0x1F400] = colours[(!!(b1&0x40))<<1 | !!(b2&0x40)];
-		b[(ty*640*8)+(tx*8) + (y*640) + 2 + 0x1F400] = colours[(!!(b1&0x20))<<1 | !!(b2&0x20)];
-		b[(ty*640*8)+(tx*8) + (y*640) + 3 + 0x1F400] = colours[(!!(b1&0x10))<<1 | !!(b2&0x10)];
-		b[(ty*640*8)+(tx*8) + (y*640) + 4 + 0x1F400] = colours[(!!(b1&0x8))<<1 | !!(b2&0x8)];
-		b[(ty*640*8)+(tx*8) + (y*640) + 5 + 0x1F400] = colours[(!!(b1&0x4))<<1 | !!(b2&0x4)];
-		b[(ty*640*8)+(tx*8) + (y*640) + 6 + 0x1F400] = colours[(!!(b1&0x2))<<1 | !!(b2&0x2)];
-		b[(ty*640*8)+(tx*8) + (y*640) + 7 + 0x1F400] = colours[(!!(b1&0x1))<<1 | !!(b2&0x1)];
-	}
-	}
+				b1 = mem_get_raw(tileaddr);
+				b2 = mem_get_raw(tileaddr+1);
+				b[(ty*640*8)+(tx*8) + (y*640) + 0 + 0x1F400] = colours[(!!(b1&0x80))<<1 | !!(b2&0x80)];
+				b[(ty*640*8)+(tx*8) + (y*640) + 1 + 0x1F400] = colours[(!!(b1&0x40))<<1 | !!(b2&0x40)];
+				b[(ty*640*8)+(tx*8) + (y*640) + 2 + 0x1F400] = colours[(!!(b1&0x20))<<1 | !!(b2&0x20)];
+				b[(ty*640*8)+(tx*8) + (y*640) + 3 + 0x1F400] = colours[(!!(b1&0x10))<<1 | !!(b2&0x10)];
+				b[(ty*640*8)+(tx*8) + (y*640) + 4 + 0x1F400] = colours[(!!(b1&0x8))<<1 | !!(b2&0x8)];
+				b[(ty*640*8)+(tx*8) + (y*640) + 5 + 0x1F400] = colours[(!!(b1&0x4))<<1 | !!(b2&0x4)];
+				b[(ty*640*8)+(tx*8) + (y*640) + 6 + 0x1F400] = colours[(!!(b1&0x2))<<1 | !!(b2&0x2)];
+				b[(ty*640*8)+(tx*8) + (y*640) + 7 + 0x1F400] = colours[(!!(b1&0x1))<<1 | !!(b2&0x1)];
+			}
+		}
 	}
 }
-
+*/
 int lcd_cycle(void)
 {
 	int cycles = cpu_get_cycles();
 	int this_frame, subframe_cycles;
 	static int prev_line;
+	//char k[21];
 
 	if(sdl_update())
 		return 0;
@@ -341,9 +377,16 @@ int lcd_cycle(void)
 	if(ly_int && lcd_line == lcd_ly_compare)
 		interrupt(INTR_LCDSTAT);
 
+	/*if (timertime%256==0) {
+		dclear();
+		sprintf(k,"%i", lcd_line);locate(1,6,k);
+		sprintf(k,"%i", cycles);locate(1,7,k);
+		dupdate();
+	}*/
+
 	if(prev_line == 143 && lcd_line == 144)
 	{
-		draw_stuff();
+		//draw_stuff();
 		interrupt(INTR_VBLANK);
 		sdl_frame();
 	}

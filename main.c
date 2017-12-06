@@ -5,30 +5,41 @@
 #include "cpu.h"
 #include "lcd.h"
 #include "sdl.h"
+#include "disp.h"
+#include "timek.h"
 
-int main(int argc, char *argv[])
+int main()
 {
 	int r;
-	const char usage[] = "Usage: %s <rom>\n";
 
-	if(argc != 2) {
-		fprintf(stderr, usage, argv[0]);
+	timek_init();
+
+	dclear();
+	r = rom_load("tet.gb");
+	if(!r) {
+		locate(1,1,"ROM FAILED!");
+		dupdate();
+		getkey();
 		return 0;
 	}
-
-	r = rom_load(argv[1]);
-	if(!r)
-		return 0;
-
+	dclear();
 	sdl_init();
-
-	printf("ROM OK!\n");
+	//printf("ROM OK!\n");
+	locate(1,1,"ROM OK!");
+	dupdate();
+	getkey();
 
 	mem_init();
-	printf("Mem OK!\n");
+	//printf("Mem OK!\n");
+	locate(1,2,"Mem OK!");
+	dupdate();
+	getkey();
 
 	cpu_init();
-	printf("CPU OK!\n");
+	//printf("CPU OK!\n");
+	locate(1,3,"CPU OK!");
+	dupdate();
+	getkey();
 
 	while(1)
 	{
@@ -40,7 +51,10 @@ int main(int argc, char *argv[])
 
 		timer_cycle();
 	}
-
+	
+	timek_stop();
+	mem_free();
+	rom_close();
 	sdl_quit();
 
 	return 0;

@@ -8,22 +8,55 @@
 #include "timer.h"
 #include "sdl.h"
 #include "cpu.h"
-
-static unsigned char *mem;
+static unsigned char *topmem;  // Top memory      0xFF00 - 0xFFFF - 256 bytes
+static unsigned char *oammem;  // OAM memory      0xFE00 - 0xFE9F - 160 bytes
+static unsigned char *mainmem; // Work memory     0xC000 - 0xDFFF - 8192 bytes
+static unsigned char *extmem;  // External memory 0xA000 - 0xBFFF - 8192 bytes
+static unsigned char *vmem;    // Video memory    0x8000 - 0x9FFF - 8192 bytes
 static int DMA_pending = 0;
 static int joypad_select_buttons, joypad_select_directions;
+int bank = 0;
 
 void mem_bank_switch(unsigned int n)
 {
-	unsigned char *b = rom_getbytes();
+	//unsigned char *b = rom_getbytes();
+	bank = n*0x4000;
+	//memcpy(&mem[0x4000], &b[n * 0x4000], 0x4000);
+}
 
-	memcpy(&mem[0x4000], &b[n * 0x4000], 0x4000);
+unsigned char inline rom_read_byte_bank(unsigned short i)
+{
+	if (i>=0x4000 && bank != 0) {
+		return rom_read_byte(bank+(i-0x4000));
+	}
+	return rom_read_byte(i);
 }
 
 /* LCD's access to VRAM */
-unsigned char inline mem_get_raw(unsigned short p)
+/*unsigned char inline mem_get_raw(unsigned short p)
 {
-	return mem[p];
+	return vmem[p-0x8000];
+}*/
+unsigned char inline mem_get_raw(unsigned short i) {
+	if(i < 0xFF00) {
+		if (i < 0xFEA0 && i >= 0xFE00) {        // OAM memory
+			return oammem[i-0xFE00];
+		} else if (i < 0xFE00 && i >= 0xE000) { // Shadow work ram 
+			return mainmem[i-0xE000];
+		} else if (i < 0xE000 && i >= 0xC000) { // Work ram
+			return mainmem[i-0xC000];
+		} else if (i < 0xC000 && i >= 0xA000) { // External ram
+			return extmem[i-0xA000];
+		} else if (i < 0xA000 && i >= 0x8000) { // Video ram
+			return vmem[i-0x8000];
+		} else if (i < 0x8000) {                // Cartradge rom
+			return rom_read_byte_bank(i);
+		}
+	}
+	if (i >= 0xFF00) {                          // Top ram
+		return topmem[i-0xFF00];
+	}
+	return 0;
 }
 
 unsigned char inline mem_get_byte(unsigned short i)
@@ -38,12 +71,25 @@ unsigned char inline mem_get_byte(unsigned short i)
 			DMA_pending = 0;
 		else
 		{
-			return mem[0xFE00+elapsed];
+			return oammem[elapsed];
 		}
 	}
 
-	if(i < 0xFF00)
-		return mem[i];
+	if(i < 0xFF00) {
+		if (i < 0xFEA0 && i >= 0xFE00) {        // OAM memory
+			return oammem[i-0xFE00];
+		} else if (i < 0xFE00 && i >= 0xE000) { // Shadow work ram 
+			return mainmem[i-0xE000];
+		} else if (i < 0xE000 && i >= 0xC000) { // Work ram
+			return mainmem[i-0xC000];
+		} else if (i < 0xC000 && i >= 0xA000) { // External ram
+			return extmem[i-0xA000];
+		} else if (i < 0xA000 && i >= 0x8000) { // Video ram
+			return vmem[i-0x8000];
+		} else if (i < 0x8000) {                // Cartradge rom
+			return rom_read_byte_bank(i);
+		}
+	}
 
 	switch(i)
 	{
@@ -53,6 +99,12 @@ unsigned char inline mem_get_byte(unsigned short i)
 			if(!joypad_select_directions)
 				mask = sdl_get_directions();
 			return 0xC0 | (0xF^mask) | (joypad_select_buttons | joypad_select_directions);
+		break;
+		case 0xFF01: /* Link port data */
+			//fprintf(stderr, "%c", i);
+		break;
+		case 0xFF02: /* Link port setup */
+			// Todo
 		break;
 		case 0xFF04:
 			return timer_get_div();
@@ -83,7 +135,10 @@ unsigned char inline mem_get_byte(unsigned short i)
 		break;
 	}
 
-	return mem[i];
+	if (i >= 0xFF00) {
+		return topmem[i-0xFF00];
+	}
+	return 0;
 }
 
 unsigned short mem_get_word(unsigned short i)
@@ -97,10 +152,28 @@ unsigned short mem_get_word(unsigned short i)
 			DMA_pending = 0;
 		else
 		{
-			return mem[0xFE00+elapsed];
+			return oammem[elapsed];
 		}
 	}
-	return mem[i] | (mem[i+1]<<8);
+
+	return mem_get_raw(i) | (mem_get_raw(i+1)<<8);
+}
+
+void mem_write_raw(unsigned short d, unsigned char i)
+{
+	if(d >= 0xFF00) {                       // Top ram
+		topmem[d-0xFF00] = i;
+	} else if (d < 0xFEA0 && d >= 0xFE00) { // OAM memory
+		oammem[i-0xFE00] = i;
+	} else if (d < 0xFE00 && d >= 0xE000) { // Shadow work ram 
+		mainmem[d-0xE000] = i;
+	} else if (d < 0xE000 && d >= 0xC000) { // Work ram
+		mainmem[d-0xC000] = i;
+	} else if (d < 0xC000 && d >= 0xA000) { // External ram
+		extmem[i-0xA000] = i;
+	} else if (d < 0xA000 && d >= 0x8000) { // Video ram
+		vmem[d-0x8000] = i;
+	}
 }
 
 void mem_write_byte(unsigned short d, unsigned char i)
@@ -132,7 +205,10 @@ void mem_write_byte(unsigned short d, unsigned char i)
 			joypad_select_directions = i&0x10;
 		break;
 		case 0xFF01: /* Link port data */
-//			fprintf(stderr, "%c", i);
+			//fprintf(stderr, "%c", i);
+		break;
+		case 0xFF02: /* Link port setup */
+			// Todo
 		break;
 		case 0xFF04:
 			timer_set_div(i);
@@ -166,7 +242,8 @@ void mem_write_byte(unsigned short d, unsigned char i)
 		break;
 		case 0xFF46: /* OAM DMA */
 			/* Copy bytes from i*0x100 to OAM */
-			memcpy(&mem[0xFE00], &mem[i*0x100], 0xA0);
+			//memcpy(&mem[0xFE00], &mem[i*0x100], 0xA0);
+			for (int at=0;at<0xA0;at++) oammem[at] = mem_get_byte((i*0x100)+at);
 			DMA_pending = cpu_get_cycles();
 		break;
 		case 0xFF47:
@@ -188,41 +265,70 @@ void mem_write_byte(unsigned short d, unsigned char i)
 		break;
 	}
 	
-	mem[d] = i;
+
+	if(d >= 0xFF00) {                       // Top ram
+		topmem[d-0xFF00] = i;
+	} else if (d < 0xFEA0 && d >= 0xFE00) { // OAM memory
+		oammem[i-0xFE00] = i;
+	} else if (d < 0xFE00 && d >= 0xE000) { // Shadow work ram 
+		mainmem[d-0xE000] = i;
+	} else if (d < 0xE000 && d >= 0xC000) { // Work ram
+		mainmem[d-0xC000] = i;
+	} else if (d < 0xC000 && d >= 0xA000) { // External ram
+		extmem[i-0xA000] = i;
+	} else if (d < 0xA000 && d >= 0x8000) { // Video ram
+		vmem[d-0x8000] = i;
+	}/* else if (d < 0x8000) {              // Cartradge rom
+		return rom_getbytes()[d];
+	}*/
+	//mem[d] = i;
 }
 
 void mem_write_word(unsigned short d, unsigned short i)
 {
-	mem[d] = i&0xFF;
-	mem[d+1] = i>>8;
+	mem_write_raw(d, i&0xFF);
+	mem_write_raw(d+1, i>>8);
 }
 
 void mem_init(void)
 {
-	unsigned char *bytes = rom_getbytes();
+	//unsigned char *bytes = rom_getbytes();
 
-	mem = calloc(1, 0x10000);
+	vmem = calloc(1, 8192);
+	extmem = calloc(1, 8192);
+	mainmem = calloc(1, 8192);
+	oammem = calloc(1, 160);
+	topmem = calloc(1, 256);
 
-	memcpy(&mem[0x0000], &bytes[0x0000], 0x4000);
-	memcpy(&mem[0x4000], &bytes[0x4000], 0x4000);
+	//memcpy(&mem[0x0000], &bytes[0x0000], 0x4000);
+	//memcpy(&mem[0x4000], &bytes[0x4000], 0x4000);
 
-	mem[0xFF10] = 0x80;
-	mem[0xFF11] = 0xBF;
-	mem[0xFF12] = 0xF3;
-	mem[0xFF14] = 0xBF;
-	mem[0xFF16] = 0x3F;
-	mem[0xFF19] = 0xBF;
-	mem[0xFF1A] = 0x7F;
-	mem[0xFF1B] = 0xFF;
-	mem[0xFF1C] = 0x9F;
-	mem[0xFF1E] = 0xBF;
-	mem[0xFF20] = 0xFF;
-	mem[0xFF23] = 0xBF;
-	mem[0xFF24] = 0x77;
-	mem[0xFF25] = 0xF3;
-	mem[0xFF26] = 0xF1;
-	mem[0xFF40] = 0x91;
-	mem[0xFF47] = 0xFC;
-	mem[0xFF48] = 0xFF;
-	mem[0xFF49] = 0xFF;
+	topmem[(0xFF10)-(0xFF00)] = 0x80;
+	topmem[(0xFF11)-(0xFF00)] = 0xBF;
+	topmem[(0xFF12)-(0xFF00)] = 0xF3;
+	topmem[(0xFF14)-(0xFF00)] = 0xBF;
+	topmem[(0xFF16)-(0xFF00)] = 0x3F;
+	topmem[(0xFF19)-(0xFF00)] = 0xBF;
+	topmem[(0xFF1A)-(0xFF00)] = 0x7F;
+	topmem[(0xFF1B)-(0xFF00)] = 0xFF;
+	topmem[(0xFF1C)-(0xFF00)] = 0x9F;
+	topmem[(0xFF1E)-(0xFF00)] = 0xBF;
+	topmem[(0xFF20)-(0xFF00)] = 0xFF;
+	topmem[(0xFF23)-(0xFF00)] = 0xBF;
+	topmem[(0xFF24)-(0xFF00)] = 0x77;
+	topmem[(0xFF25)-(0xFF00)] = 0xF3;
+	topmem[(0xFF26)-(0xFF00)] = 0xF1;
+	topmem[(0xFF40)-(0xFF00)] = 0x91;
+	topmem[(0xFF47)-(0xFF00)] = 0xFC;
+	topmem[(0xFF48)-(0xFF00)] = 0xFF;
+	topmem[(0xFF49)-(0xFF00)] = 0xFF;
+}
+
+void mem_free()
+{
+	free(vmem);
+	free(extmem);
+	free(mainmem);
+	free(oammem);
+	free(topmem);
 }
