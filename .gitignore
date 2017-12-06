@@ -8,3 +8,5 @@ gameboy
 *.ini
 *.o
 *.diff
+*.bin
+*.elf
