@@ -14,7 +14,10 @@ Fun fact: this is my first add-in with gint.
 # How to use:
 Put a 32kb gameboy rom on the root of the calculator and name it "tet.gb" (Only tested with tetris).
 
-Then in the add-in, the controls are:
+Launch the add-in, then just press any key until you reach a screen with 4 numbers on the side.
+If you are interested, the first number is the current frame number, the second is the fps and the 2 more are the controls representations.
+
+The controles are 
 
 A is SHIFT
 
