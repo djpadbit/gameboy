@@ -1,6 +1,6 @@
 # FXGB
 ## This is not a real emulator but more of a POC
-FXGB is a port of a gameboy emulator (look at the source of the fork of the original emulator) for the casio FX range of calculators.
+FXGB is a port of a gameboy emulator (look at the source of the fork for original emulator) for the casio FX range of calculators.
 The program is currently running at ~2fps (~8fps overclocked) so it's not really useable.
 I made it mostly for fun so don't really think it's gonna be maintained much.
 
