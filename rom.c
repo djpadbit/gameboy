@@ -25,6 +25,7 @@ static unsigned char *buf1;
 unsigned int buf1lp = 0;
 //unsigned int buf2lp = 0;
 unsigned int mapper;
+static int romsize = 32768;
 
 static char *carts[] = {
 	[0x00] = "ROM ONLY",
@@ -74,6 +75,22 @@ static char *banks[] = {
 	"Unknown"
 };
 
+static int bankssize[] = {
+	32768,
+	32768*2,
+	32768*4,
+	32768*8,
+	32768*16,
+	32768*32,
+	32768*64,
+	32768*128,
+	/* 0x52 */
+	(32768*32)+(32768*4),
+	(32768*32)+(32768*8),
+	(32768*32)+(32768*16),
+	32768
+};
+
 static char *rams[] = {
 	"None",
 	"  2KiB",
@@ -99,7 +116,7 @@ static unsigned char header[] = {
 
 char k[21];
 
-unsigned char inline rom_read_byte(unsigned short i)
+unsigned char inline rom_read_byte(int i) // I have no fucking idea why it doesn't work with an unsinged int but does with a signed one but it works with a unsigned short
 {
 	/*unsigned char byte;
 	int t1,t2;
@@ -137,14 +154,22 @@ unsigned char inline rom_read_byte(unsigned short i)
 			break;
 	} 16384*/
 	int lb;
+	i = (unsigned short)i;
 	if (i < buf1lp || i > (buf1lp+20000)) {
 		lb = max(0,(i-(20000/2)));
-		if (((lb+20000)-32768) > 0) lb -= ((lb+20000)-32768);
+		if (((lb+20000)-romsize) > 0) lb -= ((lb+20000)-romsize);
 		BFile_Read(fd,buf1,20000,lb);
 		buf1lp = lb;
 	}
 	return buf1[i-buf1lp];
 }
+/*
+int power(int base, int exp)
+{
+    int result = 1;
+    while(exp) { result *= base; exp--; }
+    return result;
+}*/
 
 static int rom_init()
 {
@@ -183,6 +208,8 @@ static int rom_init()
 
 	//printf("Rom size: %s\n", banks[bank_index]);
 	sprintf(k,"Rom size: %s", banks[bank_index]);locate(1,4,k);
+	//romsize = 32768*(power(2,bank_index));
+	romsize = bankssize[bank_index];
 
 	//ram = rombytes[0x149];
 	ram = rom_read_byte(0x149);
@@ -220,6 +247,12 @@ static int rom_init()
 	dupdate();
 	getkey();
 	dclear();
+
+	/*sprintf(k,"%i", romsize);locate(1,4,k);
+
+	dupdate();
+	getkey();
+	dclear();*/
 
 	//bytes = rombytes;
 

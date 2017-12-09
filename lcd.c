@@ -36,18 +36,21 @@ static int sprpalette2[] = {0, 1, 2, 3};
 //static unsigned long colours[4] = {0xFFFFFF, 0xC0C0C0, 0x808080, 0x000000};
 static color_t colours[4] = {color_black,color_dark,color_light,color_white};
 
-static unsigned char scalearrx[160] = {0, 250, 1, 250, 2, 250, 3, 250, 250, 4, 250, 5, 250, 6, 250, 250, 7, 250, 8, 250, 9, 250, 10, 250, 250, 11, 250, 12, 250, 13, 250,
+static int xoff=29;
+static int yoff=0;
+
+static unsigned char scalearrx[160]; /*= {0, 250, 1, 250, 2, 250, 3, 250, 250, 4, 250, 5, 250, 6, 250, 250, 7, 250, 8, 250, 9, 250, 10, 250, 250, 11, 250, 12, 250, 13, 250,
                                        250, 14, 250, 15, 250, 16, 250, 17, 250, 250, 18, 250, 19, 250, 20, 250, 250, 21, 250, 22, 250, 23, 250, 24, 250, 250, 25, 250, 26, 250,
                                        27, 250, 250, 28, 250, 29, 250, 30, 250, 31, 250, 250, 32, 250, 33, 250, 34, 250, 250, 35, 250, 36, 250, 37, 250, 38, 250, 250, 39, 250,
                                        40, 250, 41, 250, 250, 42, 250, 43, 250, 44, 250, 45, 250, 250, 46, 250, 47, 250, 48, 250, 250, 49, 250, 50, 250, 51, 250, 52, 250, 250,
                                        53, 250, 54, 250, 55, 250, 250, 56, 250, 57, 250, 58, 250, 59, 250, 250, 60, 250, 61, 250, 62, 250, 250, 63, 250, 64, 250, 65, 250, 66,
-                                       250, 250, 67, 250, 68, 250, 69, 250, 250};
+                                       250, 250, 67, 250, 68, 250, 69, 250, 250};*/
 
-static unsigned char scalearry[144] = {0, 250, 1, 250, 2, 250, 3, 250, 250, 4, 250, 5, 250, 6, 250, 250, 7, 250, 8, 250, 9, 250, 10, 250, 250, 11, 250, 12, 250, 13, 250,
+static unsigned char scalearry[144];/* = {0, 250, 1, 250, 2, 250, 3, 250, 250, 4, 250, 5, 250, 6, 250, 250, 7, 250, 8, 250, 9, 250, 10, 250, 250, 11, 250, 12, 250, 13, 250,
                                        250, 14, 250, 15, 250, 16, 250, 17, 250, 250, 18, 250, 19, 250, 20, 250, 250, 21, 250, 22, 250, 23, 250, 24, 250, 250, 25, 250, 26, 250,
                                        27, 250, 250, 28, 250, 29, 250, 30, 250, 31, 250, 250, 32, 250, 33, 250, 34, 250, 250, 35, 250, 36, 250, 37, 250, 38, 250, 250, 39, 250,
                                        40, 250, 41, 250, 250, 42, 250, 43, 250, 44, 250, 45, 250, 250, 46, 250, 47, 250, 48, 250, 250, 49, 250, 50, 250, 51, 250, 52, 250, 250,
-                                       53, 250, 54, 250, 55, 250, 250, 56, 250, 57, 250, 58, 250, 59, 250, 250, 60, 250, 61, 250, 62, 250, 250};
+                                       53, 250, 54, 250, 55, 250, 250, 56, 250, 57, 250, 58, 250, 59, 250, 250, 60, 250, 61, 250, 62, 250, 250};*/
 
 struct sprite {
 	int y, x, tile, flags;
@@ -165,10 +168,42 @@ static void sort_sprites(struct sprite *s, int n)
 	}
 	while(swapped);
 }
+
+void lcd_set_off(int x,int y)
+{
+	xoff = x;
+	yoff = y;
+}
+
+int lcd_get_xoff()
+{
+	return xoff;
+}
+
+int lcd_get_yoff()
+{
+	return yoff;
+}
+
+void lcd_gen_scale_arr(unsigned char w,unsigned char h)
+{
+	for (int i=0;i<w;i++) scalearrx[i] = 250;
+	for (int j=0;j<h;j++) scalearry[j] = 250;
+	float x_ratio = 160.0/(float)w;
+	float y_ratio = 144.0/(float)h;
+	for (int i=0;i<h;i++) {
+		for (int j=0;j<w;j++) {
+			scalearrx[(int)(j*x_ratio)] = j;
+			scalearry[(int)(i*y_ratio)] = i;
+		}
+	}
+}
+
 inline void sdpixel(unsigned char x, unsigned char y, color_t operator)
 {
-	if (scalearrx[x] != 250 && scalearry[y] != 250) dpixel(29+scalearrx[x],scalearry[y],operator);
+	if (scalearrx[x] != 250 && scalearry[y] != 250) dpixel(xoff+scalearrx[x],yoff+scalearry[y],operator);
 }
+
 static void draw_bg_and_window(int line)
 {
 	int x;

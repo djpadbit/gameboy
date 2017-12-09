@@ -15,19 +15,19 @@ static unsigned char *extmem;  // External memory 0xA000 - 0xBFFF - 8192 bytes
 static unsigned char *vmem;    // Video memory    0x8000 - 0x9FFF - 8192 bytes
 static int DMA_pending = 0;
 static int joypad_select_buttons, joypad_select_directions;
-int bank = 0;
+unsigned int bank = 0;
 
 void mem_bank_switch(unsigned int n)
 {
 	//unsigned char *b = rom_getbytes();
-	bank = n*0x4000;
+	bank = n;
 	//memcpy(&mem[0x4000], &b[n * 0x4000], 0x4000);
 }
 
 unsigned char inline rom_read_byte_bank(unsigned short i)
 {
 	if (i>=0x4000 && bank != 0) {
-		return rom_read_byte(bank+(i-0x4000));
+		return rom_read_byte((bank*0x4000)+(i-0x4000));
 	}
 	return rom_read_byte(i);
 }

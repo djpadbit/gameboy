@@ -11,11 +11,13 @@
 int main()
 {
 	int r;
+	char romn[20];
 
 	timek_init();
 
 	dclear();
-	r = rom_load("tet.gb");
+	keyb_input(&romn,"Enter rom file name");
+	r = rom_load(romn);
 	if(!r) {
 		locate(1,1,"ROM FAILED!");
 		dupdate();

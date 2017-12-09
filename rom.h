@@ -3,7 +3,7 @@
 int rom_load(const char *);
 unsigned char *rom_getbytes(void);
 unsigned int rom_get_mapper(void);
-unsigned char rom_read_byte(unsigned short i);
+unsigned char rom_read_byte(int i);
 void rom_close();
 
 enum {

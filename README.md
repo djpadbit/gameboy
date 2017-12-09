@@ -1,7 +1,7 @@
 # FXGB
 ## This is not a real emulator but more of a POC
 FXGB is a port of a gameboy emulator (look at the source of the fork for original emulator) for the casio FX range of calculators.
-The program is currently running at ~2fps (~8fps overclocked) so it's not really useable.
+The program is currently running at ~2fps (~11fps overclocked max on tetris) so it's not really useable.
 I made it mostly for fun so don't really think it's gonna be maintained much.
 
 Fun fact: this is my first add-in with gint.
@@ -12,19 +12,27 @@ Fun fact: this is my first add-in with gint.
 * Ehhhh
 
 # How to use:
-Put a 32kb gameboy rom on the root of the calculator and name it "tet.gb" (Only tested with tetris).
+Put a gameboy rom on the root of the calculator with a short name preferably. (Only tested with tetris and Super Mario Land)
 
-Launch the add-in, then just press any key until you reach a screen with 4 numbers on the side.
-If you are interested, the first number is the current frame number, the second is the fps and the 2 more are the controls representations.
+Launch the add-in, then enter the rom file name like it says. Then just press any key until you reach a screen with 6 numbers on the side.
+If you are interested, the first number is the fps, the second is the mode, the 2 next are the x and y offsets and the 2 last are the x and y scale resolution.
 
 The controles are 
 
-A is SHIFT
+SHIFT - A
 
-B is ALPHA
+ALPHA - B
 
-Select is OPTN
+OPTN - Select 
 
-Start is VARS
+VARS - Start
 
-Then use the directionnal arrows
+F1 - Set mode to 0 (playing mode)
+
+F2 - Set mode to 1 (Offset adjusting mode)
+
+F3 - Set mode to 2 (Scaling adjusting mode)
+
+F6 - Reste scaling and offset to default
+
+The arrows control the game in mode 0, the offset in mode 1 and the scaling in mode 2
