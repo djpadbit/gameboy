@@ -1,6 +1,6 @@
 #ifndef ROM_H
 #define ROM_H
-int rom_load(const char *);
+int rom_load(char *);
 unsigned char *rom_getbytes(void);
 unsigned int rom_get_mapper(void);
 unsigned char rom_read_byte(int i);

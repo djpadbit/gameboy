@@ -12,10 +12,10 @@ static int lcd_ly_compare;
 
 /* LCD STAT */
 static int ly_int;	/* LYC = LY coincidence interrupt enable */
-static int mode2_oam_int;
+/*static int mode2_oam_int;
 static int mode1_vblank_int;
 static int mode0_hblank_int;
-static int ly_int_flag;
+static int ly_int_flag; Not used */
 static int lcd_mode;
 
 /* LCD Control */
@@ -34,7 +34,7 @@ static int bgpalette[] = {3, 2, 1, 0};
 static int sprpalette1[] = {0, 1, 2, 3};
 static int sprpalette2[] = {0, 1, 2, 3};
 //static unsigned long colours[4] = {0xFFFFFF, 0xC0C0C0, 0x808080, 0x000000};
-static color_t colours[4] = {color_black,color_dark,color_light,color_white};
+//static color_t colours[4] = {color_black,color_dark,color_light,color_white};
 
 static int xoff=29;
 static int yoff=0;
@@ -199,7 +199,7 @@ void lcd_gen_scale_arr(unsigned char w,unsigned char h)
 	}
 }
 
-inline void sdpixel(unsigned char x, unsigned char y, color_t operator)
+static inline void sdpixel(unsigned char x, unsigned char y, color_t operator)
 {
 	if (scalearrx[x] != 250 && scalearry[y] != 250) dpixel(xoff+scalearrx[x],yoff+scalearry[y],operator);
 }
@@ -387,7 +387,7 @@ static void draw_stuff(void)
 int lcd_cycle(void)
 {
 	int cycles = cpu_get_cycles();
-	int this_frame, subframe_cycles;
+	int this_frame/*, subframe_cycles*/;
 	static int prev_line;
 	//char k[21];
 

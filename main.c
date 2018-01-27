@@ -8,16 +8,24 @@
 #include "disp.h"
 #include "timek.h"
 
+void exit_routine()
+{
+	timek_stop();
+	mem_free();
+	rom_close();
+	sdl_quit();
+}
+
 int main()
 {
-	int r;
 	char romn[20];
+	atexit(exit_routine);
 
 	timek_init();
 
 	dclear();
-	keyb_input(&romn,"Enter rom file name");
-	r = rom_load(romn);
+	keyb_input((char*)&romn,"Enter rom file name");
+	int r = rom_load(romn);
 	if(!r) {
 		locate(1,1,"ROM FAILED!");
 		dupdate();
@@ -54,10 +62,7 @@ int main()
 		timer_cycle();
 	}
 	
-	timek_stop();
-	mem_free();
-	rom_close();
-	sdl_quit();
+	exit_routine();
 
 	return 0;
 }

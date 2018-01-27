@@ -15,7 +15,6 @@
 
 */
 
-
 //unsigned char *bytes;
 static int fd;
 static unsigned char *buf1;
@@ -116,7 +115,7 @@ static unsigned char header[] = {
 
 char k[21];
 
-unsigned char inline rom_read_byte(int i) // I have no fucking idea why it doesn't work with an unsinged int but does with a signed one but it works with a unsigned short
+unsigned char inline rom_read_byte(int i) // I have no fucking idea why it doesn't work with an unsinged int but does with a signed one but it used to works with a unsigned short
 {
 	/*unsigned char byte;
 	int t1,t2;
@@ -306,50 +305,29 @@ unsigned int rom_get_mapper(void)
 	return mapper;
 }
 
-/* Shameless copy from EDIT's source code */
-
-uint16_t *Char2Font(char *sChar, uint16_t *sFont)
+// Based on EDIT's source code (see FilePath function)
+void make_path(uint16_t* dst,char* root,char *fold,char *fn)
 {
-  int i=0;
-  for(i=0;sChar[i]!=0;i++) sFont[i]=sChar[i];
-  sFont[i]=0;
-  return(sFont);
+	char *tp;
+	tp = (char*)malloc(2+strlen(root)+1+strlen(fold)+1+strlen(fn)+1); // probably off by 1 or 2 bytes
+	if(strlen(fold)==0) sprintf(tp,"\\\\%s\\%s",root,fn); //File path without folder
+	else if(strlen(fn)==0) sprintf(tp,"\\\\%s\\%s",root,fn); //File path without file
+	else sprintf(tp,"\\\\%s\\%s\\%s",root,fold,fn); //File path with file & folder
+	for (int i=0;i<strlen(tp);i++) dst[i] = tp[i];
+	dst[strlen(tp)] = 0;
+	free(tp);
 }
 
-uint16_t *FilePath(char *sRoot,char *sFolder, char *sFile,uint16_t *sFont)
-{                        
-  //Variables
-  char sPath[50];
-  
-  //File path without folder
-  if(strlen(sFolder)==0)
-    sprintf(sPath,"\\\\%s\\%s",sRoot,sFile);
-  
-  //File path without file
-  else if(strlen(sFile)==0)
-    sprintf(sPath,"\\\\%s\\%s",sRoot,sFolder);
-  
-  //File path with file & folder
-  else
-    sprintf(sPath,"\\\\%s\\%s\\%s",sRoot,sFolder,sFile);
-  
-  //Convert to FONTCHARACTER
-  Char2Font(sPath,sFont);
-  return(sFont);
-}
-
-/* End of shameless copy */
-
-int rom_load(const char *filename)
+int rom_load(char *filename)
 {
-	uint16_t sFont[64];
-	FilePath("fls0","",filename,sFont);
-	fd = BFile_Open(sFont,BFile_ReadOnly);
+	uint16_t path[64];
+	make_path(path,"fls0","",filename);
+	fd = BFile_Open(path,BFile_ReadOnly);
 
 	if(fd < 0)
 		return 0;
 
-	buf1 = calloc(1, 20000); //16384
+	buf1 = (unsigned char*)calloc(1, 20000); //16384
 	//buf2 = calloc(1, 8192);
 	BFile_Read(fd,buf1,20000,0);
 	buf1lp = 0;

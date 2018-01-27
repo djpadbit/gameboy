@@ -12,7 +12,7 @@ Fun fact: this is my first add-in with gint.
 * Ehhhh
 
 # How to use:
-Put a gameboy rom on the root of the calculator with a short name preferably. (Only tested with tetris and Super Mario Land)
+Put a gameboy rom on the root of the calculator with a short name preferably. (Only tested with Tetris and Super Mario Land)
 
 Launch the add-in, then enter the rom file name like it says. Then just press any key until you reach a screen with 6 numbers on the side.
 If you are interested, the first number is the fps, the second is the mode, the 2 next are the x and y offsets and the 2 last are the x and y scale resolution.
@@ -33,6 +33,8 @@ F2 - Set mode to 1 (Offset adjusting mode)
 
 F3 - Set mode to 2 (Scaling adjusting mode)
 
-F6 - Reste scaling and offset to default
+F4 - Reset scaling and offset to default
+
+F5 - Toggle debug display (numbers on the left)
 
 The arrows control the game in mode 0, the offset in mode 1 and the scaling in mode 2

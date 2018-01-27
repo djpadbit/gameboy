@@ -9,7 +9,7 @@
 static unsigned int frames,framet1,framet2;
 //static struct timeval tv1, tv2;
 static int button_start, button_select, button_a, button_b, button_down, button_up, button_left, button_right;
-static int mode;
+static int mode,debug_info;
 static int scalex,scaley;
 static int updel,downdel,leftdel,rightdel;
 
@@ -17,6 +17,7 @@ void sdl_init(void)
 {
 	keyboard_init();
 	mode = 0;
+	debug_info = 1;
 	scalex = 71;
 	scaley = 64;
 	lcd_gen_scale_arr(scalex,scaley);
@@ -47,11 +48,14 @@ int sdl_update(void)
 				case KEY_F3:
 					mode = 2;
 					break;
-				case KEY_F6:
+				case KEY_F4:
 					lcd_set_off(29,0);
-					scalex = 70;
-					scaley = 63;
+					scalex = 71;
+					scaley = 64;
 					lcd_gen_scale_arr(scalex,scaley);
+					break;
+				case KEY_F5:
+					debug_info = !debug_info;
 					break;
 				case KEY_SHIFT:
 					button_a = 1;
@@ -169,19 +173,21 @@ unsigned int *sdl_get_framebuffer(void)
 void sdl_frame(void)
 {
 	framet2 = timertime;
-	char k[21];
-	//sprintf(k,"%i", frames);locate(1,1,k);
-	//float fps = 1.0/((((float)(framet2))-((float)(framet1)))/256.0);
-	int fps = 1.0/((framet2-framet1)/256.0);
-	sprintf(k,"%i", fps);locate(1,1,k);
-	//sprintf(k,"%i", timertime);locate(1,3,k);
-	sprintf(k,"%i", mode);locate(1,2,k);
-	sprintf(k,"%i", lcd_get_xoff());locate(1,3,k);
-	sprintf(k,"%i", lcd_get_yoff());locate(1,4,k);
-	sprintf(k,"%i", scalex);locate(1,5,k);
-	sprintf(k,"%i", scaley);locate(1,6,k);
-	//sprintf(k,"%i", gfk());locate(1,7,k);
-	//sprintf(k,"%i", gfk2());locate(1,8,k);
+	if (debug_info) {
+		char k[21];
+		//sprintf(k,"%i", frames);locate(1,1,k);
+		//float fps = 1.0/((((float)(framet2))-((float)(framet1)))/256.0);
+		int fps = 1.0/((framet2-framet1)/256.0);
+		sprintf(k,"%i", fps);locate(1,1,k);
+		//sprintf(k,"%i", timertime);locate(1,3,k);
+		sprintf(k,"%i", mode);locate(1,2,k);
+		sprintf(k,"%i", lcd_get_xoff());locate(1,3,k);
+		sprintf(k,"%i", lcd_get_yoff());locate(1,4,k);
+		sprintf(k,"%i", scalex);locate(1,5,k);
+		sprintf(k,"%i", scaley);locate(1,6,k);
+		//sprintf(k,"%i", gfk());locate(1,7,k);
+		//sprintf(k,"%i", gfk2());locate(1,8,k);
+	}
 	dupdate();
 	dclear();
 	framet1 = timertime;

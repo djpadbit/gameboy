@@ -15,7 +15,7 @@ fxgb:
 	g1a-wrapper fxgb.bin -o fxgb.g1a -i MainIcon.bmp
 
 clean:
-	rm -f fxgb.bin fxgb.elf fxgb.g1a
+	rm -f *.bin *.elf *.g1a
 
 send:
 	p7 send -f fxgb.g1a
