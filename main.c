@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <keyboard.h>
 #include "timer.h"
 #include "rom.h"
 #include "mem.h"
@@ -58,7 +60,6 @@ int main()
 
 		if(!lcd_cycle())
 			break;
-
 		timer_cycle();
 	}
 	

@@ -1,10 +1,12 @@
 //#include <SDL/SDL.h>
 //#include <sys/time.h>
+#include <stdio.h>
 #include <events.h>
 #include <keyboard.h>
 #include <display.h>
 #include "disp.h"
 #include "timek.h"
+#include "lcd.h"
 //static SDL_Surface *screen;
 static unsigned int frames,framet1,framet2;
 //static struct timeval tv1, tv2;

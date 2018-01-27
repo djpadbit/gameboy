@@ -1,7 +1,9 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <bfile.h>
+#include <keyboard.h>
 #include "disp.h"
 #include "rom.h"
 #include "timek.h"
