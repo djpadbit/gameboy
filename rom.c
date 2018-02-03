@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <bfile.h>
 #include <keyboard.h>
+#include <mpu.h>
 #include "disp.h"
 #include "rom.h"
 #include "timek.h"
@@ -17,14 +18,10 @@
 
 */
 
-//unsigned char *bytes;
 static int fd;
 static unsigned char *buf1;
-//static unsigned char *buf2;
-//unsigned int buf1h = 0;
-//unsigned int buf2h = 0;
+static unsigned char *magicaddr = (unsigned char*) 0x88040000;
 unsigned int buf1lp = 0;
-//unsigned int buf2lp = 0;
 unsigned int mapper;
 static int romsize = 32768;
 
@@ -119,58 +116,32 @@ char k[21];
 
 unsigned char inline rom_read_byte(int i) // I have no fucking idea why it doesn't work with an unsinged int but does with a signed one but it used to works with a unsigned short
 {
-	/*unsigned char byte;
-	int t1,t2;
-	t1 = timertime;
-	BFile_Read(fd,&byte,1,i);
-	t2 = timertime;
-	dclear();
-	sprintf(k,"t:%i", t2-t1);locate(1,5,k);
-	dupdate();*/
-	/*unsigned char notb=0;
-	int lb;
-	if (i < buf1lp || i > (buf1lp+8192)) notb = 1;  // Not in buffer 1
-	if (i < buf2lp || i > (buf2lp+8192)) notb |= 2; // Not in buffer 2
-	if (notb == 3) {
-		lb = max(0,(i-(8192/2)));
-		if (((lb+8192)-32768) > 0) lb -= ((lb+8192)-32768);
-		if (buf2h > buf1h) {BFile_Read(fd,buf1,8192,lb);buf1h=0;buf1lp=lb;notb=2;}
-		if (buf2h < buf1h) {BFile_Read(fd,buf2,8192,lb);buf2h=0;buf1lp=lb;notb=1;}
-		if (buf2h == buf1h) {BFile_Read(fd,buf1,8192,lb);buf1h=0;buf1lp=lb;notb=2;}
+	if (isSH3()) { // SH3 doesn't have the 256Kb buffer
+		int lb;
+		i = (unsigned short)i;
+		if (i < buf1lp || i > (buf1lp+20000)) {
+			lb = max(0,(i-(20000/2)));
+			if (((lb+20000)-romsize) > 0) lb -= ((lb+20000)-romsize);
+			BFile_Read(fd,buf1,20000,lb);
+			buf1lp = lb;
+		}
+		return buf1[i-buf1lp];
+	} else {
+		if (romsize<=32768*8) { // 256Kb and lower roms
+			return magicaddr[i];
+		} else { 				// just put the buffer thing with the 256k buffer
+			int lb;				// Definitively not the best thing, shoule make a better thing
+			i = (unsigned short)i;
+			if (i < buf1lp || i > (buf1lp+(32768*8))) {
+				lb = max(0,(i-((32768*8)/2)));
+				if (((lb+(32768*8))-romsize) > 0) lb -= ((lb+(32768*8))-romsize);
+				BFile_Read(fd,magicaddr,(32768*8),lb);
+				buf1lp = lb;
+			}
+			return magicaddr[i-buf1lp];
+		}
 	}
-	switch (notb) {
-		case 3:	                                    // Not in any buffer (should not happen)
-			//break;
-		case 2:                                     // Not in buffer 2 meaning in buffer 1
-			buf1h++;
-			return buf1[i-buf1lp];
-			break;
-		case 1:                                     // Not in buffer 1 meaning in buffer 2
-			buf2h++;
-			return buf2[i-buf2lp];
-			break;
-		case 0:                                     // In both buffers (should not be happing but will happen) TOFIX
-			buf1h++;
-			return buf1[i-buf1lp];
-			break;
-	} 16384*/
-	int lb;
-	i = (unsigned short)i;
-	if (i < buf1lp || i > (buf1lp+20000)) {
-		lb = max(0,(i-(20000/2)));
-		if (((lb+20000)-romsize) > 0) lb -= ((lb+20000)-romsize);
-		BFile_Read(fd,buf1,20000,lb);
-		buf1lp = lb;
-	}
-	return buf1[i-buf1lp];
 }
-/*
-int power(int base, int exp)
-{
-    int result = 1;
-    while(exp) { result *= base; exp--; }
-    return result;
-}*/
 
 static int rom_init()
 {
@@ -211,6 +182,8 @@ static int rom_init()
 	sprintf(k,"Rom size: %s", banks[bank_index]);locate(1,4,k);
 	//romsize = 32768*(power(2,bank_index));
 	romsize = bankssize[bank_index];
+	if (romsize<=32768*8) BFile_Read(fd,magicaddr,romsize,0);
+	else BFile_Read(fd,magicaddr,32768*8,0);
 
 	//ram = rombytes[0x149];
 	ram = rom_read_byte(0x149);
@@ -329,19 +302,14 @@ int rom_load(char *filename)
 	if(fd < 0)
 		return 0;
 
-	buf1 = (unsigned char*)calloc(1, 20000); //16384
-	//buf2 = calloc(1, 8192);
-	BFile_Read(fd,buf1,20000,0);
-	buf1lp = 0;
-
-	//bytes = (unsigned char*)malloc(32768);
-
-	//if (bytes==NULL)
-	//	return 0;
-
-	//BFile_Read(f,bytes,32768,0);
-	
-	//BFile_Close(f);
+	if (isSH3()) {
+		buf1 = (unsigned char*)calloc(1, 20000); //16384
+		BFile_Read(fd,buf1,20000,0);
+		buf1lp = 0;
+	} else {
+		memset(magicaddr,0,32768*8); // Clear out the 256Kb
+		BFile_Read(fd,magicaddr,32768,0);
+	}
 	
 	return rom_init();
 }
@@ -349,7 +317,10 @@ int rom_load(char *filename)
 void rom_close()
 {
 	BFile_Close(fd);
-	free(buf1);
+	if (isSH3())
+		free(buf1);
+	else
+		memset(magicaddr,0,32768*8);
 }
 
 /*unsigned char *rom_getbytes(void)

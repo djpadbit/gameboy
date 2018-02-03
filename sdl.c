@@ -74,22 +74,22 @@ int sdl_update(void)
 				case KEY_LEFT:
 					if (!mode) button_left = 1;
 					else if (mode == 1) lcd_set_off(lcd_get_xoff()-1,lcd_get_yoff());
-					else if (mode == 2) lcd_gen_scale_arr(scalex--,scaley);
+					else if (mode == 2 && scalex-1 > 0) lcd_gen_scale_arr(scalex--,scaley);
 					break;
 				case KEY_RIGHT:
 					if (!mode) button_right = 1;
 					else if (mode == 1) lcd_set_off(lcd_get_xoff()+1,lcd_get_yoff());
-					else if (mode == 2) lcd_gen_scale_arr(scalex++,scaley);
+					else if (mode == 2 && scalex < 160) lcd_gen_scale_arr(scalex++,scaley);
 					break;
 				case KEY_DOWN:
 					if (!mode) button_down = 1;
 					else if (mode == 1) lcd_set_off(lcd_get_xoff(),lcd_get_yoff()+1);
-					else if (mode == 2) lcd_gen_scale_arr(scalex,scaley++);
+					else if (mode == 2 && scaley < 144) lcd_gen_scale_arr(scalex,scaley++);
 					break;
 				case KEY_UP:
 					if (!mode) button_up = 1;
 					else if (mode == 1) lcd_set_off(lcd_get_xoff(),lcd_get_yoff()-1);
-					else if (mode == 2) lcd_gen_scale_arr(scalex,scaley--);
+					else if (mode == 2 && scaley-1 > 0) lcd_gen_scale_arr(scalex,scaley--);
 					break;
 			}
 		}
@@ -98,22 +98,22 @@ int sdl_update(void)
 			switch (e.key.code) {
 				case KEY_LEFT:
 					if (mode == 1 && leftdel > 20 && (leftdel % 2) == 0) lcd_set_off(lcd_get_xoff()-1,lcd_get_yoff());
-					else if (mode == 2 && leftdel > 20 && (leftdel % 2) == 0) lcd_gen_scale_arr(scalex--,scaley);
+					else if (mode == 2 && leftdel > 20 && (leftdel % 2) == 0 && scalex-1 > 0) lcd_gen_scale_arr(scalex--,scaley);
 					leftdel++;
 					break;
 				case KEY_RIGHT:
 					if (mode == 1 && rightdel > 20 && (rightdel % 2) == 0) lcd_set_off(lcd_get_xoff()+1,lcd_get_yoff());
-					else if (mode == 2 && rightdel > 20 && (rightdel % 2) == 0) lcd_gen_scale_arr(scalex++,scaley);
+					else if (mode == 2 && rightdel > 20 && (rightdel % 2) == 0 && scalex < 160) lcd_gen_scale_arr(scalex++,scaley);
 					rightdel++;
 					break;
 				case KEY_DOWN:
 					if (mode == 1 && downdel > 20 && (downdel % 2) == 0) lcd_set_off(lcd_get_xoff(),lcd_get_yoff()+1);
-					else if (mode == 2 && downdel > 20 && (downdel % 2) == 0) lcd_gen_scale_arr(scalex,scaley++);
+					else if (mode == 2 && downdel > 20 && (downdel % 2) == 0 && scaley < 144) lcd_gen_scale_arr(scalex,scaley++);
 					downdel++;
 					break;
 				case KEY_UP:
 					if (mode == 1 && updel > 20 && (updel % 2) == 0) lcd_set_off(lcd_get_xoff(),lcd_get_yoff()-1);
-					else if (mode == 2 && updel > 20 && (updel % 2) == 0) lcd_gen_scale_arr(scalex,scaley--);
+					else if (mode == 2 && updel > 20 && (updel % 2) == 0 && scaley-1 > 0) lcd_gen_scale_arr(scalex,scaley--);
 					updel++;
 					break;
 			}
