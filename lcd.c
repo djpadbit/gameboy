@@ -391,9 +391,6 @@ int lcd_cycle(void)
 	static int prev_line;
 	//char k[21];
 
-	if(sdl_update())
-		return 0;
-
 	this_frame = cycles % (70224/4);
 	lcd_line = this_frame / (456/4);
 
@@ -424,6 +421,8 @@ int lcd_cycle(void)
 		//draw_stuff();
 		interrupt(INTR_VBLANK);
 		sdl_frame();
+		if(sdl_update())
+			return 0;
 	}
 	prev_line = lcd_line;
 	return 1;
