@@ -2,6 +2,12 @@
 #define MEM_H
 
 #include "rom.h"
+extern unsigned char *topmem;
+extern unsigned char *oammem;
+extern unsigned char *mainmem;
+extern unsigned char *extmem;
+extern unsigned char *vmem;
+
 void mem_init(void);
 unsigned char mem_get_byte(unsigned short);
 unsigned short mem_get_word(unsigned short);

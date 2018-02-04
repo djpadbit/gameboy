@@ -8,11 +8,11 @@
 #include "timer.h"
 #include "sdl.h"
 #include "cpu.h"
-static unsigned char *topmem;  // Top memory      0xFF00 - 0xFFFF - 256 bytes
-static unsigned char *oammem;  // OAM memory      0xFE00 - 0xFE9F - 160 bytes
-static unsigned char *mainmem; // Work memory     0xC000 - 0xDFFF - 8192 bytes
-static unsigned char *extmem;  // External memory 0xA000 - 0xBFFF - 8192 bytes
-static unsigned char *vmem;    // Video memory    0x8000 - 0x9FFF - 8192 bytes
+unsigned char *topmem;  // Top memory      0xFF00 - 0xFFFF - 256 bytes
+unsigned char *oammem;  // OAM memory      0xFE00 - 0xFE9F - 160 bytes
+unsigned char *mainmem; // Work memory     0xC000 - 0xDFFF - 8192 bytes
+unsigned char *extmem;  // External memory 0xA000 - 0xBFFF - 8192 bytes
+unsigned char *vmem;    // Video memory    0x8000 - 0x9FFF - 8192 bytes
 static int DMA_pending = 0;
 static int joypad_select_buttons, joypad_select_directions;
 unsigned int bank = 0;

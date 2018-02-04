@@ -242,14 +242,14 @@ static void draw_bg_and_window(int line)
 		 */
 		map_offset = (ym/8)*32 + xm/8;
 
-		tile_num = mem_get_raw(0x9800 + map_select*0x400 + map_offset);
+		tile_num = vmem[0x1800 + map_select*0x400 + map_offset];//mem_get_raw(0x9800 + map_select*0x400 + map_offset);
 		if(bg_tiledata_select)
-			tile_addr = 0x8000 + tile_num*16;
+			tile_addr = tile_num*16;
 		else
-			tile_addr = 0x9000 + ((signed char)tile_num)*16;
+			tile_addr = 0x1000 + ((signed char)tile_num)*16;
 
-		b1 = mem_get_raw(tile_addr+(ym%8)*2);
-		b2 = mem_get_raw(tile_addr+(ym%8)*2+1);
+		b1 = vmem[tile_addr+(ym%8)*2];//mem_get_raw(tile_addr+(ym%8)*2);
+		b2 = vmem[tile_addr+(ym%8)*2+1];//mem_get_raw(tile_addr+(ym%8)*2+1);
 		mask = 128>>(xm%8);
 		colour = (!!(b2&mask)<<1) | !!(b1&mask);
 		//b[line*640 + x] = colours[bgpalette[colour]];
@@ -276,11 +276,11 @@ static void draw_sprites(int line, int nsprites, struct sprite *s)
 		sprite_line = s[i].flags & VFLIP ? (sprite_size ? 15 : 7)-(line - s[i].y) : line - s[i].y;
 
 		/* Address of the tile data for this sprite line */
-		tile_addr = 0x8000 + (s[i].tile*16) + sprite_line*2;
+		tile_addr = (s[i].tile*16) + sprite_line*2;
 
 		/* The two bytes of data holding the palette entries */
-		b1 = mem_get_raw(tile_addr);
-		b2 = mem_get_raw(tile_addr+1);
+		b1 = vmem[tile_addr];//mem_get_raw(tile_addr);
+		b2 = vmem[tile_addr+1];//mem_get_raw(tile_addr+1);
 
 		/* For each pixel in the line, draw it */
 		for(x = 0; x < 8; x++)
@@ -333,14 +333,14 @@ static void render_line(int line)
 	{
 		int y;
 
-		y = mem_get_raw(0xFE00 + (i*4)) - 16;
+		y = oammem[i*4] - 16;//mem_get_raw(0xFE00 + (i*4)) - 16;
 		if(line < y || line >= y + 8+(sprite_size*8))
 			continue;
 
 		s[c].y     = y;
-		s[c].x     = mem_get_raw(0xFE00 + (i*4) + 1)-8;
-		s[c].tile  = mem_get_raw(0xFE00 + (i*4) + 2);
-		s[c].flags = mem_get_raw(0xFE00 + (i*4) + 3);
+		s[c].x     = oammem[(i*4)+1]-8;//mem_get_raw(0xFE00 + (i*4) + 1)-8;
+		s[c].tile  = oammem[(i*4)+2];//mem_get_raw(0xFE00 + (i*4) + 2);
+		s[c].flags = oammem[(i*4)+3];//mem_get_raw(0xFE00 + (i*4) + 3);
 		c++;
 
 		if(c == 10)
