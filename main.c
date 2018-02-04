@@ -29,7 +29,7 @@ int main()
 	keyb_input((char*)&romn,"Enter rom file name");
 	int r = rom_load(romn);
 	if(!r) {
-		locate(1,1,"ROM FAILED!");
+		mprint(1,1,"ROM FAILED!");
 		dupdate();
 		getkey();
 		return 0;
@@ -37,30 +37,35 @@ int main()
 	dclear();
 	sdl_init();
 	//printf("ROM OK!\n");
-	locate(1,1,"ROM OK!");
+	mprint(1,1,"ROM OK!");
 	dupdate();
 	getkey();
 
 	mem_init();
 	//printf("Mem OK!\n");
-	locate(1,2,"Mem OK!");
+	mprint(1,2,"Mem OK!");
 	dupdate();
 	getkey();
 
 	cpu_init();
 	//printf("CPU OK!\n");
-	locate(1,3,"CPU OK!");
+	mprint(1,3,"CPU OK!");
 	dupdate();
 	getkey();
 
 	while(1)
 	{
-		if(!cpu_cycle())
-			break;
+		if (mode<3) {
+			if(!cpu_cycle())
+				break;
 
-		if(!lcd_cycle())
-			break;
-		timer_cycle();
+			if(!lcd_cycle())
+				break;
+			timer_cycle();
+		} else {
+			if (sdl_menu())
+				break;
+		}
 	}
 	
 	exit_routine();

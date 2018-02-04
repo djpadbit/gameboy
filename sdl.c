@@ -11,9 +11,10 @@
 static unsigned int frames,framet1,framet2;
 //static struct timeval tv1, tv2;
 static int button_start, button_select, button_a, button_b, button_down, button_up, button_left, button_right;
-static int mode,debug_info;
+static int debug_info;
 static int scalex,scaley;
 static int updel,downdel,leftdel,rightdel;
+int mode;
 
 void sdl_init(void)
 {
@@ -40,7 +41,8 @@ int sdl_update(void)
 		if (e.type == event_key_press) {
 			switch (e.key.code) {
 				case KEY_MENU:
-					return 1;
+					mode = 3;
+					break;
 				case KEY_F1:
 					mode = 0;
 					break;
@@ -176,34 +178,54 @@ void sdl_frame(void)
 {
 	framet2 = timertime;
 	if (debug_info) {
-		char k[21];
-		//sprintf(k,"%i", frames);locate(1,1,k);
-		//float fps = 1.0/((((float)(framet2))-((float)(framet1)))/256.0);
 		int fps = 1.0/((framet2-framet1)/256.0);
-		sprintf(k,"%i", fps);locate(1,1,k);
-		//sprintf(k,"%i", timertime);locate(1,3,k);
-		sprintf(k,"%i", mode);locate(1,2,k);
-		sprintf(k,"%i", lcd_get_xoff());locate(1,3,k);
-		sprintf(k,"%i", lcd_get_yoff());locate(1,4,k);
-		sprintf(k,"%i", scalex);locate(1,5,k);
-		sprintf(k,"%i", scaley);locate(1,6,k);
-		//sprintf(k,"%i", gfk());locate(1,7,k);
-		//sprintf(k,"%i", gfk2());locate(1,8,k);
+		mprint(1,1,"%i",fps);
+		mprint(1,2,"%i",mode);
+		mprint(1,3,"%i",lcd_get_xoff());
+		mprint(1,4,"%i",lcd_get_yoff());
+		mprint(1,5,"%i",scalex);
+		mprint(1,6,"%i",scaley);
 	}
 	dupdate();
 	dclear();
 	framet1 = timertime;
 	frames++;
-	/*if(frames == 0)
-		gettimeofday(&tv1, NULL);
-	
-	frames++;
-	if(frames % 1000 == 0)
-	{
-		gettimeofday(&tv2, NULL);
-		printf("Frames %d, seconds: %d, fps: %d\n", frames, tv2.tv_sec - tv1.tv_sec, frames/(tv2.tv_sec - tv1.tv_sec));
+}
+
+int sdl_menu()
+{
+	int sel=0;
+	event_t e;
+	while (1) {
+		mprint(1,1,"Menu:");
+		mprint(1,2,"Load Savestate");
+		mprint(1,3,"Save Savestate");
+		mprint(1,4,"Quit");
+		//mprint(1,5,"%i",sel);
+		drect(1, (sel+2) * 8 - 8,22 * 6 - 5, ((sel+3) * 8 - 8)-1,color_invert);
+		dupdate();
+		dclear();
+		// Don't use getkey() because it sends you back to the menu when you press the menu key
+		while (1) {
+			e = waitevent();
+			if (e.type == event_key_press) break;
+		}
+		switch (e.key.code) {
+			case KEY_EXIT:
+				mode = 0;
+				return 0;
+				break;
+			case KEY_DOWN:
+				if (sel < 2) sel++;
+				break;
+			case KEY_UP:
+				if (sel > 0) sel--;
+				break;
+			case KEY_EXE:
+				if (sel==2) return 1;
+				break;
+		}
 	}
-	SDL_Flip(screen);*/
 }
 
 void sdl_quit()

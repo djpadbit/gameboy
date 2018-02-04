@@ -24,13 +24,13 @@ void mem_bank_switch(unsigned int n)
 	//memcpy(&mem[0x4000], &b[n * 0x4000], 0x4000);
 }
 
-unsigned char inline rom_read_byte_bank(unsigned short i)
+/*unsigned char inline rom_read_byte_bank(unsigned short i)
 {
 	if (i>=0x4000 && bank != 0) {
 		return rom_read_byte((bank*0x4000)+(i-0x4000));
 	}
 	return rom_read_byte(i);
-}
+}*/
 
 /* LCD's access to VRAM */
 /*unsigned char inline mem_get_raw(unsigned short p)
@@ -50,7 +50,7 @@ unsigned char inline mem_get_raw(unsigned short i) {
 		} else if (i < 0xA000 && i >= 0x8000) { // Video ram
 			return vmem[i-0x8000];
 		} else if (i < 0x8000) {                // Cartradge rom
-			return rom_read_byte_bank(i);
+			return rom_read_byte(i>=0x4000 && bank != 0 ? (bank*0x4000)+(i-0x4000) : i);//rom_read_byte_bank(i);
 		}
 	}
 	if (i >= 0xFF00) {                          // Top ram
@@ -87,7 +87,7 @@ unsigned char inline mem_get_byte(unsigned short i)
 		} else if (i < 0xA000 && i >= 0x8000) { // Video ram
 			return vmem[i-0x8000];
 		} else if (i < 0x8000) {                // Cartradge rom
-			return rom_read_byte_bank(i);
+			return rom_read_byte(i>=0x4000 && bank != 0 ? (bank*0x4000)+(i-0x4000) : i);//rom_read_byte_bank(i);
 		}
 	}
 

@@ -2,12 +2,25 @@
 #include <keyboard.h>
 #include <ctype.h>
 #include <stdio.h>
-
+#include <stdarg.h>
+/*
 void locate(int x, int y, const char* str)
 {
 	if(x < 1 || x > 21 || y < 1 || y > 8) return;
 	if(gray_runs()) gtext(x * 6 - 5, y * 8 - 8, str);
 	else dtext(x * 6 - 5, y * 8 - 8, str);
+}*/
+
+void mprint(int x,int y, const char* fmt, ...)
+{
+	if(x < 1 || x > 21 || y < 1 || y > 8) return;
+	char k[22];
+	va_list args;
+	va_start(args, fmt);
+	vsprintf(k,fmt,args);
+	va_end(args);
+	if(gray_runs()) gtext(x * 6 - 5, y * 8 - 8, k);
+	else dtext(x * 6 - 5, y * 8 - 8, k);
 }
 
 void keyb_input(char* buf,const char* ask)
@@ -22,12 +35,12 @@ void keyb_input(char* buf,const char* ask)
 	for (i=0;i<20;i++) buf[i] = 0;
 	while (run) {
 		dclear();
-		locate(1,1,ask);
-		locate(1,2,buf);
+		mprint(1,1,ask);
+		mprint(1,2,buf);
 		dline(ptr*6,8,ptr*6,7+7,color_black);
-		if (lower) locate(1,3,"Lowercase");
-		else locate(1,3,"Uppercase");
-		locate(1,4,"Use OPTN to switch");
+		if (lower) mprint(1,3,"Lowercase");
+		else mprint(1,3,"Uppercase");
+		mprint(1,4,"Use OPTN to switch");
 		//sprintf(k,"%i", ptr);locate(1,4,k);
 		//sprintf(k,"%i", key);locate(1,5,k);
 		//sprintf(k,"%i", key_type(key));locate(1,6,k);

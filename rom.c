@@ -112,8 +112,6 @@ static unsigned char header[] = {
 	0xDD, 0xDC, 0x99, 0x9F, 0xBB, 0xB9, 0x33, 0x3E
 };
 
-char k[21];
-
 unsigned char inline rom_read_byte(int i) // I have no fucking idea why it doesn't work with an unsinged int but does with a signed one but it used to works with a unsigned short
 {
 	if (isSH3()) { // SH3 doesn't have the 256Kb buffer
@@ -130,7 +128,7 @@ unsigned char inline rom_read_byte(int i) // I have no fucking idea why it doesn
 		if (romsize<=32768*8) { // 256Kb and lower roms
 			return magicaddr[i];
 		} else { 				// just put the buffer thing with the 256k buffer
-			int lb;				// Definitively not the best thing, shoule make a better thing
+			int lb;				// Definitively not the best thing, should make a better thing
 			i = (unsigned short)i;
 			if (i < buf1lp || i > (buf1lp+(32768*8))) {
 				lb = max(0,(i-((32768*8)/2)));
@@ -162,13 +160,14 @@ static int rom_init()
 	}
 	buf[16] = '\0';
 	//printf("Rom title: %s\n", buf);
-	sprintf(k,"Rom title: %s", buf);locate(1,1,k);
+	mprint(1,1,"Rom title: %s", buf);
 
 	//type = rombytes[0x147];
 	type = rom_read_byte(0x147);
 
 	//printf("Cartridge type: %s (%02X)\n", carts[type], type);
-	locate(1,2,"Cartridge type:");sprintf(k,"%s (%02X)", carts[type], type);locate(1,3,k);
+	mprint(1,2,"Cartridge type:");
+	mprint(1,3,"%s (%02X)", carts[type], type);
 
 	//bank_index = rombytes[0x148];
 	bank_index = rom_read_byte(0x148);
@@ -179,7 +178,7 @@ static int rom_init()
 		bank_index = 11;
 
 	//printf("Rom size: %s\n", banks[bank_index]);
-	sprintf(k,"Rom size: %s", banks[bank_index]);locate(1,4,k);
+	mprint(1,4,"Rom size: %s", banks[bank_index]);
 	//romsize = 32768*(power(2,bank_index));
 	romsize = bankssize[bank_index];
 	if (romsize<=32768*8) BFile_Read(fd,magicaddr,romsize,0);
@@ -191,19 +190,19 @@ static int rom_init()
 		ram = 4;
 
 	//printf("RAM size: %s\n", rams[ram]);
-	sprintf(k,"RAM size: %s", rams[ram]);locate(1,5,k);
+	mprint(1,5,"RAM size: %s", rams[ram]);
 
 	//region = rombytes[0x14A];
 	region = rom_read_byte(0x14A);
 	if(region > 2)
 		region = 2;
 	//printf("Region: %s\n", regions[region]);
-	sprintf(k,"Region: %s", regions[region]);locate(1,6,k);
+	mprint(1,6,"Region: %s", regions[region]);
 
 	//version = rombytes[0x14C];
 	version = rom_read_byte(0x14C);
 	//printf("Version: %02X\n", version);
-	sprintf(k,"Version: %02X", version);locate(1,7,k);
+	mprint(1,7,"Version: %02X", version);
 
 	//for(i = 0x134; i <= 0x14C; i++)
 	//	checksum = checksum - rombytes[i] - 1;
@@ -214,19 +213,13 @@ static int rom_init()
 	pass = rom_read_byte(0x14D) == checksum;
 
 	//printf("Checksum: %s (%02X)\n", pass ? "OK" : "FAIL", checksum);
-	sprintf(k,"Checksum: %s (%02X)", pass ? "OK" : "FAIL", checksum);locate(1,8,k);
+	mprint(1,8,"Checksum: %s (%02X)", pass ? "OK" : "FAIL", checksum);
 	if(!pass)
 		return 0;
 
 	dupdate();
 	getkey();
 	dclear();
-
-	/*sprintf(k,"%i", romsize);locate(1,4,k);
-
-	dupdate();
-	getkey();
-	dclear();*/
 
 	//bytes = rombytes;
 
