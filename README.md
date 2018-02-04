@@ -19,6 +19,8 @@ If you are interested, the first number is the fps, the second is the mode, the 
 
 The controles are 
 
+MENU - Open menu
+
 SHIFT - A
 
 ALPHA - B
