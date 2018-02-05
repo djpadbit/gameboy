@@ -14,7 +14,7 @@ void locate(int x, int y, const char* str)
 void mprint(int x,int y, const char* fmt, ...)
 {
 	if(x < 1 || x > 21 || y < 1 || y > 8) return;
-	char k[22];
+	char k[50];
 	va_list args;
 	va_start(args, fmt);
 	vsprintf(k,fmt,args);
