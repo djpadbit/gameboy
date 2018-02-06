@@ -7,6 +7,8 @@ extern unsigned char *oammem;
 extern unsigned char *mainmem;
 extern unsigned char *extmem;
 extern unsigned char *vmem;
+extern int DMA_pending, joypad_select_buttons, joypad_select_directions;
+extern unsigned int bank;
 
 void mem_init(void);
 unsigned char mem_get_byte(unsigned short);

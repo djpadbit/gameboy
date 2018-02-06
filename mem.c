@@ -13,8 +13,8 @@ unsigned char *oammem;  // OAM memory      0xFE00 - 0xFE9F - 160 bytes
 unsigned char *mainmem; // Work memory     0xC000 - 0xDFFF - 8192 bytes
 unsigned char *extmem;  // External memory 0xA000 - 0xBFFF - 8192 bytes
 unsigned char *vmem;    // Video memory    0x8000 - 0x9FFF - 8192 bytes
-static int DMA_pending = 0;
-static int joypad_select_buttons, joypad_select_directions;
+int DMA_pending = 0;
+int joypad_select_buttons, joypad_select_directions;
 unsigned int bank = 0;
 
 void mem_bank_switch(unsigned int n)

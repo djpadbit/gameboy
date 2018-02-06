@@ -2,6 +2,7 @@
 #include "mem.h"
 #include "rom.h"
 #include "interrupt.h"
+#include "cpu.h"
 
 #define set_HL(x) do {unsigned int macro = (x); c.L = macro&0xFF; c.H = macro>>8;} while(0)
 #define set_BC(x) do {unsigned int macro = (x); c.C = macro&0xFF; c.B = macro>>8;} while(0)
@@ -24,27 +25,9 @@
 #define flag_H !!((c.F & 0x20))
 #define flag_C !!((c.F & 0x10))
 
-struct CPU {
-	unsigned char H;
-	unsigned char L;
-
-	unsigned char D;
-	unsigned char E;
-
-	unsigned char B;
-	unsigned char C;
-
-	unsigned char A;
-	unsigned char F;
-
-	unsigned short SP;
-	unsigned short PC;
-	unsigned int cycles;
-};
-
-static struct CPU c;
-static int is_debugged;
-static int halted;
+struct CPU c;
+int is_debugged;
+int halted;
 
 void cpu_init(void)
 {

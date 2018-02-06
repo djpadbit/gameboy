@@ -1,5 +1,25 @@
 #ifndef LCD_H
 #define LCD_H
+//LCD config
+
+extern int lcd_line;
+extern int lcd_ly_compare;
+extern int ly_int;
+extern int lcd_mode;
+extern int lcd_enabled;
+extern int window_tilemap_select;
+extern int window_enabled;
+extern int tilemap_select;
+extern int bg_tiledata_select;
+extern int sprite_size;
+extern int sprites_enabled;
+extern int bg_enabled;
+extern int scroll_x, scroll_y;
+extern int window_x, window_y;
+extern int bgpalette[4];
+extern int sprpalette1[4];
+extern int sprpalette2[4];
+
 int lcd_cycle(void);
 int lcd_get_line(void);
 unsigned char lcd_get_stat();

@@ -7,6 +7,7 @@
 #include "disp.h"
 #include "timek.h"
 #include "lcd.h"
+#include "save.h"
 //static SDL_Surface *screen;
 static unsigned int frames,framet1,framet2;
 //static struct timeval tv1, tv2;
@@ -194,8 +195,7 @@ void sdl_frame(void)
 
 int sdl_menu()
 {
-	int sel=0;
-	event_t e;
+	int sel=0,key;
 	while (1) {
 		mprint(1,1,"Menu:");
 		mprint(1,2,"Load Savestate");
@@ -205,12 +205,8 @@ int sdl_menu()
 		drect(1, (sel+2) * 8 - 8,22 * 6 - 5, ((sel+3) * 8 - 8)-1,color_invert);
 		dupdate();
 		dclear();
-		// Don't use getkey() because it sends you back to the menu when you press the menu key
-		while (1) {
-			e = waitevent();
-			if (e.type == event_key_press) break;
-		}
-		switch (e.key.code) {
+		key = getkey_opt(getkey_none,0);
+		switch (key) {
 			case KEY_EXIT:
 				mode = 0;
 				return 0;
@@ -222,6 +218,8 @@ int sdl_menu()
 				if (sel > 0) sel--;
 				break;
 			case KEY_EXE:
+				if (sel==0) save_load_state();
+				if (sel==1) save_save_state();
 				if (sel==2) return 1;
 				break;
 		}

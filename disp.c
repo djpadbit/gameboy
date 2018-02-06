@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <events.h>
 /*
 void locate(int x, int y, const char* str)
 {
@@ -30,8 +31,10 @@ void keyb_input(char* buf,const char* ask)
 	key = 0;
 	int run = 1;
 	int lower = 1;
-	//char buf[20];
-	//char k[21];
+	int shift = 0;
+	int ls = 0;
+	int alpha = 0;
+	int la = 0;
 	for (i=0;i<20;i++) buf[i] = 0;
 	while (run) {
 		dclear();
@@ -41,11 +44,8 @@ void keyb_input(char* buf,const char* ask)
 		if (lower) mprint(1,3,"Lowercase");
 		else mprint(1,3,"Uppercase");
 		mprint(1,4,"Use OPTN to switch");
-		//sprintf(k,"%i", ptr);locate(1,4,k);
-		//sprintf(k,"%i", key);locate(1,5,k);
-		//sprintf(k,"%i", key_type(key));locate(1,6,k);
 		dupdate();
-		key = getkey();
+		key = getkey_opt(getkey_none,0);
 		switch (key) {
 			case KEY_LEFT:
 				if (ptr > 0) ptr--;
@@ -62,16 +62,25 @@ void keyb_input(char* buf,const char* ask)
 			case KEY_OPTN:
 				lower = !lower;
 				break;
+			case KEY_SHIFT:
+				shift = !shift;
+				break;
+			case KEY_ALPHA:
+				if (shift) alpha = 2;
+				else alpha = !alpha;
+				break;
 			default:
+				if (alpha) key |= MOD_ALPHA;
+				if (shift) key |= MOD_SHIFT;
 				if (key_char(key) != 0 && ptr < 21) buf[ptr++] = lower ? tolower(key_char(key)) : key_char(key);
 				break;
 		}
+		if (ls) shift = 0;
+		if (la == 1) alpha = 0;
+		ls = shift;
+		la = alpha;
 		
 	}
 	dclear();
 	dupdate();
-	/*for (i=0;;i++) {
-		if (!buf[i]) break;
-		out[i] = buf[i];
-	}*/
 }
