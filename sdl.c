@@ -77,22 +77,22 @@ int sdl_update(void)
 				case KEY_LEFT:
 					if (!mode) button_left = 1;
 					else if (mode == 1) lcd_set_off(lcd_get_xoff()-1,lcd_get_yoff());
-					else if (mode == 2 && scalex-1 > 0) lcd_gen_scale_arr(scalex--,scaley);
+					else if (mode == 2 && scalex-1 > 0) lcd_gen_scale_arr((scalex--)-1,scaley);
 					break;
 				case KEY_RIGHT:
 					if (!mode) button_right = 1;
 					else if (mode == 1) lcd_set_off(lcd_get_xoff()+1,lcd_get_yoff());
-					else if (mode == 2 && scalex < 160) lcd_gen_scale_arr(scalex++,scaley);
+					else if (mode == 2 && scalex < 160) lcd_gen_scale_arr((scalex++)+1,scaley);
 					break;
 				case KEY_DOWN:
 					if (!mode) button_down = 1;
 					else if (mode == 1) lcd_set_off(lcd_get_xoff(),lcd_get_yoff()+1);
-					else if (mode == 2 && scaley < 144) lcd_gen_scale_arr(scalex,scaley++);
+					else if (mode == 2 && scaley < 144) lcd_gen_scale_arr(scalex,(scaley++)+1);
 					break;
 				case KEY_UP:
 					if (!mode) button_up = 1;
 					else if (mode == 1) lcd_set_off(lcd_get_xoff(),lcd_get_yoff()-1);
-					else if (mode == 2 && scaley-1 > 0) lcd_gen_scale_arr(scalex,scaley--);
+					else if (mode == 2 && scaley-1 > 0) lcd_gen_scale_arr(scalex,(scaley--)-1);
 					break;
 			}
 		}
