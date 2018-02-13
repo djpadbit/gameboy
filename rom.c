@@ -111,7 +111,6 @@ unsigned char inline rom_read_byte(int i) // I have no fucking idea why it doesn
 {
 	if (isSH3()) { // SH3 doesn't have the 256Kb buffer
 		int lb;
-		i = (unsigned short)i;
 		if (i < buf1lp || i > (buf1lp+20000)) {
 			lb = max(0,(i-(20000/2)));
 			if (((lb+20000)-romsize) > 0) lb -= ((lb+20000)-romsize);
@@ -120,18 +119,17 @@ unsigned char inline rom_read_byte(int i) // I have no fucking idea why it doesn
 		}
 		return buf1[i-buf1lp];
 	} else {
-		if (romsize<=32768*8) { // 256Kb and lower roms
+		if (i<=32768*8) { // 256Kb and lower roms
 			return magicaddr[i];
 		} else { 				// just put the buffer thing with the 256k buffer
 			int lb;				// Definitively not the best thing, should make a better thing
-			i = (unsigned short)i;
-			if (i < buf1lp || i > (buf1lp+(32768*8))) {
-				lb = max(0,(i-((32768*8)/2)));
-				if (((lb+(32768*8))-romsize) > 0) lb -= ((lb+(32768*8))-romsize);
-				BFile_Read(fd,magicaddr,(32768*8),lb);
+			if (i < buf1lp || i > (buf1lp+20000)) {
+				lb = max(0,(i-(20000/2)));
+				if (((lb+20000)-romsize) > 0) lb -= ((lb+20000)-romsize);
+				BFile_Read(fd,buf1,20000,lb);
 				buf1lp = lb;
 			}
-			return magicaddr[i-buf1lp];
+			return buf1[i-buf1lp];
 		}
 	}
 }
@@ -176,8 +174,16 @@ static int rom_init()
 	mprint(1,4,"Rom size: %s", banks[bank_index]);
 	//romsize = 32768*(power(2,bank_index));
 	romsize = bankssize[bank_index];
-	if (romsize<=32768*8) BFile_Read(fd,magicaddr,romsize,0);
-	else BFile_Read(fd,magicaddr,32768*8,0);
+	if (!isSH3()) {
+		if (romsize<=32768*8) 
+			BFile_Read(fd,magicaddr,romsize,0);
+		else {
+			BFile_Read(fd,magicaddr,32768*8,0);
+			buf1lp = 32768*8;
+			buf1 = (unsigned char*)calloc(1, 20000); //16384
+			BFile_Read(fd,buf1,20000,32768*8);
+		}
+	}
 
 	//ram = rombytes[0x149];
 	ram = rom_read_byte(0x149);
