@@ -187,8 +187,8 @@ int lcd_get_yoff()
 
 void lcd_gen_scale_arr(unsigned char w,unsigned char h)
 {
-	for (int i=0;i<w;i++) scalearrx[i] = 250;
-	for (int j=0;j<h;j++) scalearry[j] = 250;
+	for (int i=0;i<160;i++) scalearrx[i] = 250;
+	for (int j=0;j<144;j++) scalearry[j] = 250;
 	float x_ratio = 160.0/(float)w;
 	float y_ratio = 144.0/(float)h;
 	for (int i=0;i<h;i++) {
