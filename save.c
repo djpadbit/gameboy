@@ -17,23 +17,7 @@ struct save
 	struct CPU c;
 	int is_debugged,halted;
 	//LCD config
-	int lcd_line;
-	int lcd_ly_compare;
-	int ly_int;
-	int lcd_mode;
-	int lcd_enabled;
-	int window_tilemap_select;
-	int window_enabled;
-	int tilemap_select;
-	int bg_tiledata_select;
-	int sprite_size;
-	int sprites_enabled;
-	int bg_enabled;
-	int scroll_x, scroll_y;
-	int window_x, window_y;
-	int bgpalette[4];
-	int sprpalette1[4];
-	int sprpalette2[4];
+	struct lcd_config lcd_c;
 };
 
 void gen_save(struct save *dst)
@@ -45,25 +29,7 @@ void gen_save(struct save *dst)
 	dst->c = c;
 	dst->is_debugged = is_debugged;
 	dst->halted = halted;
-	dst->lcd_line = lcd_line;
-	dst->lcd_ly_compare = lcd_ly_compare;
-	dst->ly_int = ly_int;
-	dst->lcd_mode = lcd_mode;
-	dst->lcd_enabled = lcd_enabled;
-	dst->window_tilemap_select = window_tilemap_select;
-	dst->window_enabled = window_enabled;
-	dst->tilemap_select = tilemap_select;
-	dst->bg_tiledata_select = bg_tiledata_select;
-	dst->sprite_size = sprite_size;
-	dst->sprites_enabled = sprites_enabled;
-	dst->bg_enabled = bg_enabled;
-	dst->scroll_x = scroll_x;
-	dst->scroll_y = scroll_y;
-	dst->window_x = window_x;
-	dst->window_y = window_y;
-	memcpy(bgpalette,dst->bgpalette,sizeof(bgpalette));
-	memcpy(sprpalette1,dst->sprpalette1,sizeof(sprpalette1));
-	memcpy(sprpalette2,dst->sprpalette2,sizeof(sprpalette2));
+	lcd_get_conf(&dst->lcd_c);
 }
 
 void apply_save(struct save *src)
@@ -75,24 +41,7 @@ void apply_save(struct save *src)
 	c = src->c;
 	is_debugged = src->is_debugged;
 	halted = src->halted;
-	lcd_ly_compare = src->lcd_ly_compare;
-	ly_int = src->ly_int;
-	lcd_mode = src->lcd_mode;
-	lcd_enabled = src->lcd_enabled;
-	window_tilemap_select = src->window_tilemap_select;
-	window_enabled = src->window_enabled;
-	tilemap_select = src->tilemap_select;
-	bg_tiledata_select = src->bg_tiledata_select;
-	sprite_size = src->sprite_size;
-	sprites_enabled = src->sprites_enabled;
-	bg_enabled = src->bg_enabled;
-	scroll_x = src->scroll_x;
-	scroll_y = src->scroll_y;
-	window_x = src->window_x;
-	window_y = src->window_y;
-	memcpy(src->bgpalette,bgpalette,sizeof(bgpalette));
-	memcpy(src->sprpalette1,sprpalette1,sizeof(sprpalette1));
-	memcpy(src->sprpalette2,sprpalette2,sizeof(sprpalette2));
+	lcd_set_conf(&src->lcd_c);
 }
 
 int save_file(char* name)

@@ -7,33 +7,33 @@
 #include <string.h>
 #include "disp.h"
 
-int lcd_line;
-int lcd_ly_compare;
+static int lcd_line;
+static int lcd_ly_compare;
 
 
 /* LCD STAT */
-int ly_int;	/* LYC = LY coincidence interrupt enable */
+static int ly_int;	/* LYC = LY coincidence interrupt enable */
 /*static int mode2_oam_int;
 static int mode1_vblank_int;
 static int mode0_hblank_int;
 static int ly_int_flag; Not used */
-int lcd_mode;
+static int lcd_mode;
 
 /* LCD Control */
-int lcd_enabled;
-int window_tilemap_select;
-int window_enabled;
-int tilemap_select;
-int bg_tiledata_select;
-int sprite_size;
-int sprites_enabled;
-int bg_enabled;
-int scroll_x, scroll_y;
-int window_x, window_y;
+static int lcd_enabled;
+static int window_tilemap_select;
+static int window_enabled;
+static int tilemap_select;
+static int bg_tiledata_select;
+static int sprite_size;
+static int sprites_enabled;
+static int bg_enabled;
+static int scroll_x, scroll_y;
+static int window_x, window_y;
 
-int bgpalette[] = {3, 2, 1, 0};
-int sprpalette1[] = {0, 1, 2, 3};
-int sprpalette2[] = {0, 1, 2, 3};
+static int bgpalette[] = {3, 2, 1, 0};
+static int sprpalette1[] = {0, 1, 2, 3};
+static int sprpalette2[] = {0, 1, 2, 3};
 //static unsigned long colours[4] = {0xFFFFFF, 0xC0C0C0, 0x808080, 0x000000};
 //static color_t colours[4] = {color_black,color_dark,color_light,color_white};
 
@@ -63,6 +63,51 @@ enum {
 	HFLIP = 0x20,
 	PNUM  = 0x10
 };
+
+void lcd_get_conf(struct lcd_config *dst)
+{
+	dst->lcd_line = lcd_line;
+	dst->lcd_ly_compare = lcd_ly_compare;
+	dst->ly_int = ly_int;
+	dst->lcd_mode = lcd_mode;
+	dst->lcd_enabled = lcd_enabled;
+	dst->window_tilemap_select = window_tilemap_select;
+	dst->window_enabled = window_enabled;
+	dst->tilemap_select = tilemap_select;
+	dst->bg_tiledata_select = bg_tiledata_select;
+	dst->sprite_size = sprite_size;
+	dst->sprites_enabled = sprites_enabled;
+	dst->bg_enabled = bg_enabled;
+	dst->scroll_x = scroll_x;
+	dst->scroll_y = scroll_y;
+	dst->window_x = window_x;
+	dst->window_y = window_y;
+	memcpy(&dst->bgpalette,&bgpalette,sizeof(bgpalette));
+	memcpy(&dst->sprpalette1,&sprpalette1,sizeof(sprpalette1));
+	memcpy(&dst->sprpalette2,&sprpalette2,sizeof(sprpalette2));
+}
+
+void lcd_set_conf(struct lcd_config *src)
+{
+	lcd_ly_compare = src->lcd_ly_compare;
+	ly_int = src->ly_int;
+	lcd_mode = src->lcd_mode;
+	lcd_enabled = src->lcd_enabled;
+	window_tilemap_select = src->window_tilemap_select;
+	window_enabled = src->window_enabled;
+	tilemap_select = src->tilemap_select;
+	bg_tiledata_select = src->bg_tiledata_select;
+	sprite_size = src->sprite_size;
+	sprites_enabled = src->sprites_enabled;
+	bg_enabled = src->bg_enabled;
+	scroll_x = src->scroll_x;
+	scroll_y = src->scroll_y;
+	window_x = src->window_x;
+	window_y = src->window_y;
+	memcpy(&bgpalette,&src->bgpalette,sizeof(bgpalette));
+	memcpy(&sprpalette1,&src->sprpalette1,sizeof(sprpalette1));
+	memcpy(&sprpalette2,&src->sprpalette2,sizeof(sprpalette2));
+}
 
 unsigned char lcd_get_stat(void)
 {
