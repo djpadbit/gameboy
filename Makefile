@@ -2,7 +2,7 @@
 #LDFLAGS=-lSDL
 LDFLAGS = `fxsdk --libs`
 CC = sh3eb-elf-gcc
-CFLAGS = -mb -ffreestanding -nostdlib -ansi -pedantic -Wall -Ofast -fstrength-reduce -fthread-jumps  -fcse-follow-jumps -fcse-skip-blocks -frerun-cse-after-loop  -fexpensive-optimizations -fforce-addr -fomit-frame-pointer -std=c99
+CFLAGS = -Wall -O3 -fstrength-reduce -fthread-jumps -fcse-follow-jumps -fcse-skip-blocks -frerun-cse-after-loop  -fexpensive-optimizations -fforce-addr -fomit-frame-pointer -std=gnu99
 CFLAGS += `fxsdk --cflags`
 all: clean fxgb
 

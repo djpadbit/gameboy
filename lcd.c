@@ -296,6 +296,35 @@ static void draw_bg_and_window(int line)
 		else
 			tile_addr = 0x1000 + ((signed char)tile_num)*16;
 
+		/* Needs a bit of fixing but should work
+		   Isn't really usefull since it speeds up the emulator by like 0.5fps lul
+		   But was pretty interesting to do
+		asm volatile("mov #7, r0\n"
+			"mov #2, r1\n"
+			"and r0, %3\n"
+			"mul.l r1, %3\n"
+			"sts macl, %3\n"
+			"add %3, %2\n"
+			"and r0, %4\n"
+			"mov #-128, r3\n"
+			//"neg %4, %4\n"
+			"shld %4, r3\n"
+			"mov %1, r0\n"
+			"mov.b @(r0,%2), r1\n"
+			"add #1, %2\n"
+			"mov.b @(r0,%2), r2\n"
+			"and r3, r2\n"
+			"shll r2\n"
+			"and r3, r1\n"
+			"not r2, r2\n"
+			"not r2, r2\n"
+			"not r1, r1\n"
+			"not r1, r1\n"
+			"or r2, r1\n"
+			"mov r1, %0\n"
+			: "=r" (colour)
+			: "r" (vmem), "r" (tile_addr), "r" (ym), "r" (xm)
+			: "r0", "r1", "r2", "r3");*/
 		b1 = vmem[tile_addr+(ym%8)*2];//mem_get_raw(tile_addr+(ym%8)*2);
 		b2 = vmem[tile_addr+(ym%8)*2+1];//mem_get_raw(tile_addr+(ym%8)*2+1);
 		mask = 128>>(xm%8);
@@ -303,7 +332,7 @@ static void draw_bg_and_window(int line)
 		//b[line*640 + x] = colours[bgpalette[colour]];
 		//dpixel(x,line,bgpalette[colour] <= 2 ? color_black : color_white);
 		//if (scalearrx[x] != 250 && scalearry[line] != 250) dpixel(scalearrx[x],scalearry[line],bgpalette[colour] <= 2 ? color_black : color_white);
-		//sdpixel(x,line,colours[bgpalette[colour]]); //
+		//sdpixel(x,line,colours[bgpalette[colour]]);
 		sdpixel(x,line,bgpalette[colour] <= 2 ? color_white : color_black);
 	}
 }

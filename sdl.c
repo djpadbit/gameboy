@@ -179,7 +179,7 @@ void sdl_frame(void)
 {
 	framet2 = timertime;
 	if (debug_info) {
-		int fps = 1.0/((framet2-framet1)/256.0);
+		int fps = 1.0/((framet2-framet1)/1024.0);
 		mprint(1,1,"%i",fps);
 		mprint(1,2,"%i",mode);
 		mprint(1,3,"%i",lcd_get_xoff());
