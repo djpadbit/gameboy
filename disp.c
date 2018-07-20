@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <events.h>
+#include <string.h>
 /*
 void locate(int x, int y, const char* str)
 {
@@ -26,7 +27,7 @@ void mprint(int x,int y, const char* fmt, ...)
 
 void keyb_input(char* buf,const char* ask)
 {
-	int key,ptr,i;
+	int key,ptr;
 	ptr = 0;
 	key = 0;
 	int run = 1;
@@ -35,7 +36,7 @@ void keyb_input(char* buf,const char* ask)
 	int ls = 0;
 	int alpha = 0;
 	int la = 0;
-	for (i=0;i<20;i++) buf[i] = 0;
+	memset(buf,0,20);
 	while (run) {
 		dclear();
 		mprint(1,1,ask);
@@ -44,6 +45,7 @@ void keyb_input(char* buf,const char* ask)
 		if (lower) mprint(1,3,"Lowercase");
 		else mprint(1,3,"Uppercase");
 		mprint(1,4,"Use OPTN to switch");
+		mprint(1,5,alpha == 2 ? "Alpha lock" : alpha == 1 ? "Alpha" : shift ? "Shift" : "");
 		dupdate();
 		key = getkey_opt(getkey_none,0);
 		switch (key) {

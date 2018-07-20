@@ -66,7 +66,7 @@ unsigned char inline mem_get_byte(unsigned short i)
 
 	if(DMA_pending && i < 0xFF80)
 	{
-		elapsed = cpu_get_cycles() - DMA_pending;
+		elapsed = c.cycles - DMA_pending;
 		if(elapsed >= 160)
 			DMA_pending = 0;
 		else
@@ -147,7 +147,7 @@ unsigned short mem_get_word(unsigned short i)
 
 	if(DMA_pending && i < 0xFF80)
 	{
-		elapsed = cpu_get_cycles() - DMA_pending;
+		elapsed = c.cycles - DMA_pending;
 		if(elapsed >= 160)
 			DMA_pending = 0;
 		else
@@ -244,7 +244,7 @@ void mem_write_byte(unsigned short d, unsigned char i)
 			/* Copy bytes from i*0x100 to OAM */
 			//memcpy(&mem[0xFE00], &mem[i*0x100], 0xA0);
 			for (int at=0;at<0xA0;at++) oammem[at] = mem_get_byte((i*0x100)+at);
-			DMA_pending = cpu_get_cycles();
+			DMA_pending = c.cycles;
 		break;
 		case 0xFF47:
 			lcd_write_bg_palette(i);

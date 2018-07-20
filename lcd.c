@@ -40,18 +40,8 @@ static int sprpalette2[] = {0, 1, 2, 3};
 static int xoff=29;
 static int yoff=0;
 
-static unsigned char scalearrx[160]; /*= {0, 250, 1, 250, 2, 250, 3, 250, 250, 4, 250, 5, 250, 6, 250, 250, 7, 250, 8, 250, 9, 250, 10, 250, 250, 11, 250, 12, 250, 13, 250,
-                                       250, 14, 250, 15, 250, 16, 250, 17, 250, 250, 18, 250, 19, 250, 20, 250, 250, 21, 250, 22, 250, 23, 250, 24, 250, 250, 25, 250, 26, 250,
-                                       27, 250, 250, 28, 250, 29, 250, 30, 250, 31, 250, 250, 32, 250, 33, 250, 34, 250, 250, 35, 250, 36, 250, 37, 250, 38, 250, 250, 39, 250,
-                                       40, 250, 41, 250, 250, 42, 250, 43, 250, 44, 250, 45, 250, 250, 46, 250, 47, 250, 48, 250, 250, 49, 250, 50, 250, 51, 250, 52, 250, 250,
-                                       53, 250, 54, 250, 55, 250, 250, 56, 250, 57, 250, 58, 250, 59, 250, 250, 60, 250, 61, 250, 62, 250, 250, 63, 250, 64, 250, 65, 250, 66,
-                                       250, 250, 67, 250, 68, 250, 69, 250, 250};*/
-
-static unsigned char scalearry[144];/* = {0, 250, 1, 250, 2, 250, 3, 250, 250, 4, 250, 5, 250, 6, 250, 250, 7, 250, 8, 250, 9, 250, 10, 250, 250, 11, 250, 12, 250, 13, 250,
-                                       250, 14, 250, 15, 250, 16, 250, 17, 250, 250, 18, 250, 19, 250, 20, 250, 250, 21, 250, 22, 250, 23, 250, 24, 250, 250, 25, 250, 26, 250,
-                                       27, 250, 250, 28, 250, 29, 250, 30, 250, 31, 250, 250, 32, 250, 33, 250, 34, 250, 250, 35, 250, 36, 250, 37, 250, 38, 250, 250, 39, 250,
-                                       40, 250, 41, 250, 250, 42, 250, 43, 250, 44, 250, 45, 250, 250, 46, 250, 47, 250, 48, 250, 250, 49, 250, 50, 250, 51, 250, 52, 250, 250,
-                                       53, 250, 54, 250, 55, 250, 250, 56, 250, 57, 250, 58, 250, 59, 250, 250, 60, 250, 61, 250, 62, 250, 250};*/
+static unsigned char scalearrx[160];
+static unsigned char scalearry[144];
 
 struct sprite {
 	int y, x, tile, flags;
@@ -187,7 +177,7 @@ void lcd_set_window_x(unsigned char n) {
 	window_x = n;
 }
 
-static void swap(struct sprite *a, struct sprite *b)
+static inline void swap(struct sprite *a, struct sprite *b)
 {
 	struct sprite c;
 
@@ -196,7 +186,7 @@ static void swap(struct sprite *a, struct sprite *b)
 	*b =  c;
 }
 
-static void sort_sprites(struct sprite *s, int n)
+static inline void sort_sprites(struct sprite *s, int n)
 {
 	int swapped, i;
 
@@ -233,8 +223,6 @@ int lcd_get_yoff()
 
 void lcd_gen_scale_arr(unsigned char w,unsigned char h)
 {
-	//for (int i=0;i<160;i++) scalearrx[i] = 250;
-	//for (int j=0;j<144;j++) scalearry[j] = 250;
 	memset(scalearrx,250,160);
 	memset(scalearry,250,144);
 	float x_ratio = 160.0/(float)w;
@@ -252,7 +240,7 @@ static inline void sdpixel(unsigned char x, unsigned char y, color_t operator)
 	if (scalearrx[x] != 250 && scalearry[y] != 250) dpixel(xoff+scalearrx[x],yoff+scalearry[y],operator);
 }
 
-static void draw_bg_and_window(int line)
+static inline void draw_bg_and_window(int line)
 {
 	int x;
 
@@ -296,35 +284,6 @@ static void draw_bg_and_window(int line)
 		else
 			tile_addr = 0x1000 + ((signed char)tile_num)*16;
 
-		/* Needs a bit of fixing but should work
-		   Isn't really usefull since it speeds up the emulator by like 0.5fps lul
-		   But was pretty interesting to do
-		asm volatile("mov #7, r0\n"
-			"mov #2, r1\n"
-			"and r0, %3\n"
-			"mul.l r1, %3\n"
-			"sts macl, %3\n"
-			"add %3, %2\n"
-			"and r0, %4\n"
-			"mov #-128, r3\n"
-			//"neg %4, %4\n"
-			"shld %4, r3\n"
-			"mov %1, r0\n"
-			"mov.b @(r0,%2), r1\n"
-			"add #1, %2\n"
-			"mov.b @(r0,%2), r2\n"
-			"and r3, r2\n"
-			"shll r2\n"
-			"and r3, r1\n"
-			"not r2, r2\n"
-			"not r2, r2\n"
-			"not r1, r1\n"
-			"not r1, r1\n"
-			"or r2, r1\n"
-			"mov r1, %0\n"
-			: "=r" (colour)
-			: "r" (vmem), "r" (tile_addr), "r" (ym), "r" (xm)
-			: "r0", "r1", "r2", "r3");*/
 		b1 = vmem[tile_addr+(ym%8)*2];//mem_get_raw(tile_addr+(ym%8)*2);
 		b2 = vmem[tile_addr+(ym%8)*2+1];//mem_get_raw(tile_addr+(ym%8)*2+1);
 		mask = 128>>(xm%8);
@@ -337,7 +296,7 @@ static void draw_bg_and_window(int line)
 	}
 }
 
-static void draw_sprites(int line, int nsprites, struct sprite *s)
+static inline void draw_sprites(int line, int nsprites, struct sprite *s)
 {
 	int i;
 
@@ -424,15 +383,13 @@ static void render_line(int line)
 			break;
 	}
 
-	if(c)
-		sort_sprites(s, c);
-
 	/* Draw the background layer */
 	draw_bg_and_window(line);
 
-	draw_sprites(line, c, s);
-
-
+	if(c) {
+		sort_sprites(s, c);
+		draw_sprites(line, c, s);
+	}
 }
 /*
 static void draw_stuff(void)
@@ -463,12 +420,11 @@ static void draw_stuff(void)
 */
 int lcd_cycle(void)
 {
-	int cycles = cpu_get_cycles();
 	int this_frame/*, subframe_cycles*/;
 	static int prev_line;
 	//char k[21];
 
-	this_frame = cycles % (70224/4);
+	this_frame = c.cycles % (70224/4);
 	lcd_line = this_frame / (456/4);
 
 	if(this_frame < 204/4)

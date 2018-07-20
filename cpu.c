@@ -1,6 +1,8 @@
 #include <stdio.h>
+#include <keyboard.h>
 #include "mem.h"
 #include "rom.h"
+#include "disp.h"
 #include "interrupt.h"
 #include "cpu.h"
 
@@ -658,16 +660,38 @@ void cpu_interrupt(unsigned short vector)
 	interrupt_disable();
 }
 
-unsigned int cpu_get_cycles(void)
-{
-	return c.cycles;
-}
-
 void cpu_print_debug(void)
 {
 	//printf("%04X: %02X\n", c.PC, mem_get_byte(c.PC));
 	//printf("\tAF: %02X%02X, BC: %02X%02X, DE: %02X%02X, HL: %02X%02X SP: %04X, cycles %d\n",
 	//	c.A, c.F, c.B, c.C, c.D, c.E, c.H, c.L, c.SP, c.cycles);
+}
+
+int isprint(unsigned char c)
+{
+	if (c > 0x1f && c != 0x7f) return 1;
+	return 0;
+}
+
+static inline char ths(char c)
+{
+	if (!isprint(c)) return '.';
+	return c;
+}
+
+void cpu_print_info()
+{
+	dclear();
+	mprint(1,1,"CPU Debug:");
+	mprint(1,2," Regs:");
+	mprint(1,3,"  AF:%02X%02X  BC:%02X%02X",c.A,c.F,c.B,c.C);
+	mprint(1,4,"  DE:%02X%02X  HL:%02X%02X",c.D,c.E,c.H,c.L);
+	mprint(1,5,"  SP:%04X  PC:%04X",c.SP,c.PC);
+	mprint(1,6," Opcode: %02X",mem_get_raw(c.PC));
+	mprint(1,7,"  %04X:%02X%02X%02X%02X %c%c%c%c",c.PC-4,mem_get_raw(c.PC-4),mem_get_raw(c.PC-3),mem_get_raw(c.PC-2),mem_get_raw(c.PC-1),ths(mem_get_raw(c.PC-4)),ths(mem_get_raw(c.PC-3)),ths(mem_get_raw(c.PC-2)),ths(mem_get_raw(c.PC-1)));
+	mprint(1,8,"  %04X:%02X%02X%02X%02X %c%c%c%c",c.PC,mem_get_raw(c.PC),mem_get_raw(c.PC+1),mem_get_raw(c.PC+2),mem_get_raw(c.PC+3),ths(mem_get_raw(c.PC)),ths(mem_get_raw(c.PC+1)),ths(mem_get_raw(c.PC+2)),ths(mem_get_raw(c.PC+3)));
+	dupdate();
+	getkey_opt(getkey_none,0);
 }
 
 int cpu_cycle(void)

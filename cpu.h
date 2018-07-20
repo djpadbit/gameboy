@@ -25,6 +25,6 @@ extern int halted;
 
 void cpu_init(void);
 int cpu_cycle(void);
-unsigned int cpu_get_cycles(void);
 void cpu_interrupt(unsigned short);
+void cpu_print_info();
 #endif

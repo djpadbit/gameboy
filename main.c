@@ -53,10 +53,11 @@ int main()
 	dupdate();
 	getkey();
 
+	int exit_c = 1;
 	while(1)
 	{
 		if (mode<3) {
-			if(!cpu_cycle())
+			if(!(exit_c = cpu_cycle()))
 				break;
 
 			if(!lcd_cycle())
@@ -67,6 +68,8 @@ int main()
 				break;
 		}
 	}
+	if (!exit_c)
+		cpu_print_info();
 	
 	exit_routine();
 
