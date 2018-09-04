@@ -27,4 +27,6 @@ void cpu_init(void);
 int cpu_cycle(void);
 void cpu_interrupt(unsigned short);
 void cpu_print_info();
+void cpu_unhalt(void);
+int cpu_halted(void);
 #endif

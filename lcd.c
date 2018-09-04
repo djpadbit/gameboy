@@ -13,10 +13,9 @@ static int lcd_ly_compare;
 
 /* LCD STAT */
 static int ly_int;	/* LYC = LY coincidence interrupt enable */
-/*static int mode2_oam_int;
-static int mode1_vblank_int;
-static int mode0_hblank_int;
-static int ly_int_flag; Not used */
+static int oam_int;
+static int vblank_int;
+static int hblank_int;
 static int lcd_mode;
 
 /* LCD Control */
@@ -58,6 +57,9 @@ void lcd_get_conf(struct lcd_config *dst)
 {
 	dst->lcd_line = lcd_line;
 	dst->lcd_ly_compare = lcd_ly_compare;
+	dst->oam_int = oam_int;
+	dst->vblank_int = vblank_int;
+	dst->hblank_int = hblank_int;
 	dst->ly_int = ly_int;
 	dst->lcd_mode = lcd_mode;
 	dst->lcd_enabled = lcd_enabled;
@@ -79,7 +81,11 @@ void lcd_get_conf(struct lcd_config *dst)
 
 void lcd_set_conf(struct lcd_config *src)
 {
+	lcd_line = src->lcd_line;
 	lcd_ly_compare = src->lcd_ly_compare;
+	oam_int = src->oam_int;
+	vblank_int = src->vblank_int;
+	hblank_int = src->hblank_int;
 	ly_int = src->ly_int;
 	lcd_mode = src->lcd_mode;
 	lcd_enabled = src->lcd_enabled;
@@ -97,12 +103,6 @@ void lcd_set_conf(struct lcd_config *src)
 	memcpy(&bgpalette,&src->bgpalette,sizeof(bgpalette));
 	memcpy(&sprpalette1,&src->sprpalette1,sizeof(sprpalette1));
 	memcpy(&sprpalette2,&src->sprpalette2,sizeof(sprpalette2));
-}
-
-unsigned char lcd_get_stat(void)
-{
-
-	return (ly_int)<<6 | lcd_mode;
 }
 
 void lcd_write_bg_palette(unsigned char n)
@@ -131,7 +131,6 @@ void lcd_write_spr_palette2(unsigned char n)
 
 void lcd_write_scroll_x(unsigned char n)
 {
-//	printf("x scroll changed to %02x\n", n);
 	scroll_x = n;
 }
 
@@ -145,15 +144,22 @@ int lcd_get_line(void)
 	return lcd_line;
 }
 
+unsigned char lcd_get_stat(void)
+{
+	unsigned char coincidence = (lcd_line == lcd_ly_compare) << 2;
+	return 0x80 | ly_int | oam_int | vblank_int | hblank_int | coincidence | lcd_mode;
+}
+
 void lcd_write_stat(unsigned char c)
 {
-	ly_int = !!(c&0x40);
+	ly_int     = c&0x40;
+	oam_int    = c&0x20;
+	vblank_int = c&0x10;
+	hblank_int = c&0x08;
 }
 
 void lcd_write_control(unsigned char c)
 {
-//	printf("LCDC set to %02x\n", c);
-//	cpu_print_debug();
 	bg_enabled            = !!(c & 0x01);
 	sprites_enabled       = !!(c & 0x02);
 	sprite_size           = !!(c & 0x04);
@@ -162,6 +168,11 @@ void lcd_write_control(unsigned char c)
 	window_enabled        = !!(c & 0x20);
 	window_tilemap_select = !!(c & 0x40);
 	lcd_enabled           = !!(c & 0x80);
+}
+
+unsigned char lcd_get_ly_compare(void)
+{
+	return lcd_ly_compare;
 }
 
 void lcd_set_ly_compare(unsigned char c)
@@ -240,11 +251,11 @@ static inline void sdpixel(unsigned char x, unsigned char y, color_t operator)
 	if (scalearrx[x] != 250 && scalearry[y] != 250) dpixel(xoff+scalearrx[x],yoff+scalearry[y],operator);
 }
 
-static inline void draw_bg_and_window(int line)
+static void draw_bg_and_window(int line, int ox, int d)
 {
 	int x;
 
-	for(x = 0; x < 160; x++)
+	for(x = ox; x < ox+d; x++)
 	{
 		unsigned int map_select, map_offset, tile_num, tile_addr, xm, ym;
 		unsigned char b1, b2, mask, colour;
@@ -358,89 +369,203 @@ static inline void draw_sprites(int line, int nsprites, struct sprite *s)
 	}
 }
 
-static void render_line(int line)
+static void render_line(int line, int x, int d)
 {
-	int i, c = 0;
+	int i;
+	static int c;
 
-	struct sprite s[10];
+	static struct sprite s[10];
 	//unsigned int *b = sdl_get_framebuffer();
 
-	for(i = 0; i<40; i++)
+	/* Pretend this is lcd mode 2, see if there will be sprites this line */
+	if(x == 0)
 	{
-		int y;
+		for(i = 0; i<40; i++)
+		{
+			int y;
 
-		y = oammem[i*4] - 16;//mem_get_raw(0xFE00 + (i*4)) - 16;
-		if(line < y || line >= y + 8+(sprite_size*8))
-			continue;
+			y = oammem[i*4] - 16;//mem_get_raw(0xFE00 + (i*4)) - 16;
+			if(line < y || line >= y + 8+(sprite_size*8))
+				continue;
 
-		s[c].y     = y;
-		s[c].x     = oammem[(i*4)+1]-8;//mem_get_raw(0xFE00 + (i*4) + 1)-8;
-		s[c].tile  = oammem[(i*4)+2];//mem_get_raw(0xFE00 + (i*4) + 2);
-		s[c].flags = oammem[(i*4)+3];//mem_get_raw(0xFE00 + (i*4) + 3);
-		c++;
+			s[c].y     = y;
+			s[c].x     = oammem[(i*4)+1]-8;//mem_get_raw(0xFE00 + (i*4) + 1)-8;
+			s[c].tile  = oammem[(i*4)+2];//mem_get_raw(0xFE00 + (i*4) + 2);
+			s[c].flags = oammem[(i*4)+3];//mem_get_raw(0xFE00 + (i*4) + 3);
+			c++;
 
-		if(c == 10)
-			break;
+			if(c == 10)
+				break;
+		}
+
+		if(c)
+			sort_sprites(s, c);
 	}
 
 	/* Draw the background layer */
-	draw_bg_and_window(line);
+	draw_bg_and_window(line, x, d);
 
-	if(c) {
-		sort_sprites(s, c);
+	/* If there were sprites this line, paste them over what we drew */
+	if(x+d >= 160 && c)
+	{
 		draw_sprites(line, c, s);
+		c = 0;
 	}
+	/*b[line*640+168] =
+	b[line*640+169] = bg_tiledata_select ? 0x00ff00 : 0xff0000;
+	b[line*640+172] =
+	b[line*640+173] = tilemap_select ? 0x00ff00 : 0xff0000;*/
 }
 /*
 static void draw_stuff(void)
 {
 	unsigned int *b = sdl_get_framebuffer();
-	int y, tx, ty;
+	int y, tx, ty, mx, my;
+	int x1, y1;
 
-	for(ty = 0; ty < 24; ty++) {
-		for(tx = 0; tx < 16; tx++) {
-			for(y = 0; y<8; y++) {
-				unsigned char b1, b2;
-				int tileaddr = 0x8000 +  ty*0x100 + tx*16 + y*2;
+	// tile data 
+	x1 = 320;
+	y1 = 0;
+	for(ty = 0; ty < 24; ty++)
+	{
+	for(tx = 0; tx < 16; tx++)
+	{
+	for(y = 0; y<8; y++)
+	{
+		unsigned char b1, b2;
+		int tileaddr = 0x8000 +  ty*0x100 + tx*16 + y*2;
 
-				b1 = mem_get_raw(tileaddr);
-				b2 = mem_get_raw(tileaddr+1);
-				b[(ty*640*8)+(tx*8) + (y*640) + 0 + 0x1F400] = colours[(!!(b1&0x80))<<1 | !!(b2&0x80)];
-				b[(ty*640*8)+(tx*8) + (y*640) + 1 + 0x1F400] = colours[(!!(b1&0x40))<<1 | !!(b2&0x40)];
-				b[(ty*640*8)+(tx*8) + (y*640) + 2 + 0x1F400] = colours[(!!(b1&0x20))<<1 | !!(b2&0x20)];
-				b[(ty*640*8)+(tx*8) + (y*640) + 3 + 0x1F400] = colours[(!!(b1&0x10))<<1 | !!(b2&0x10)];
-				b[(ty*640*8)+(tx*8) + (y*640) + 4 + 0x1F400] = colours[(!!(b1&0x8))<<1 | !!(b2&0x8)];
-				b[(ty*640*8)+(tx*8) + (y*640) + 5 + 0x1F400] = colours[(!!(b1&0x4))<<1 | !!(b2&0x4)];
-				b[(ty*640*8)+(tx*8) + (y*640) + 6 + 0x1F400] = colours[(!!(b1&0x2))<<1 | !!(b2&0x2)];
-				b[(ty*640*8)+(tx*8) + (y*640) + 7 + 0x1F400] = colours[(!!(b1&0x1))<<1 | !!(b2&0x1)];
-			}
-		}
+		b1 = mem_get_raw(tileaddr);
+		b2 = mem_get_raw(tileaddr+1);
+		b[(ty*640*8)+(tx*8) + (y*640) + x1 + (y1*640) + 0] = colours[(!!(b1&0x80))<<1 | !!(b2&0x80)];
+		b[(ty*640*8)+(tx*8) + (y*640) + x1 + (y1*640) + 1] = colours[(!!(b1&0x40))<<1 | !!(b2&0x40)];
+		b[(ty*640*8)+(tx*8) + (y*640) + x1 + (y1*640) + 2] = colours[(!!(b1&0x20))<<1 | !!(b2&0x20)];
+		b[(ty*640*8)+(tx*8) + (y*640) + x1 + (y1*640) + 3] = colours[(!!(b1&0x10))<<1 | !!(b2&0x10)];
+		b[(ty*640*8)+(tx*8) + (y*640) + x1 + (y1*640) + 4] = colours[(!!(b1&0x8))<<1 | !!(b2&0x8)];
+		b[(ty*640*8)+(tx*8) + (y*640) + x1 + (y1*640) + 5] = colours[(!!(b1&0x4))<<1 | !!(b2&0x4)];
+		b[(ty*640*8)+(tx*8) + (y*640) + x1 + (y1*640) + 6] = colours[(!!(b1&0x2))<<1 | !!(b2&0x2)];
+		b[(ty*640*8)+(tx*8) + (y*640) + x1 + (y1*640) + 7] = colours[(!!(b1&0x1))<<1 | !!(b2&0x1)];
 	}
-}
-*/
+	}
+	}
+
+	// bg1 map 
+	x1 = 8;
+	y1 = 200;
+	for(my = 0; my < 32; my++)
+	{
+	for(mx = 0; mx < 32; mx++)
+	{
+	for(y = 0; y<8; y++)
+	{
+		unsigned char b1, b2, t;
+		int mapaddr = 0x9800 + my*32 + mx;
+		int tileaddr;
+
+		t = mem_get_raw(mapaddr);
+
+		tileaddr = 0x9000 + (signed char)t*16;
+		b1 = mem_get_raw(tileaddr+y*2);
+		b2 = mem_get_raw(tileaddr+y*2+1);
+		b[(my*640*8)+(mx*8) + (y*640) + x1 + y1*640 + 0] = colours[(!!(b1&0x80))<<1 | !!(b2&0x80)];
+		b[(my*640*8)+(mx*8) + (y*640) + x1 + y1*640 + 1] = colours[(!!(b1&0x40))<<1 | !!(b2&0x40)];
+		b[(my*640*8)+(mx*8) + (y*640) + x1 + y1*640 + 2] = colours[(!!(b1&0x20))<<1 | !!(b2&0x20)];
+		b[(my*640*8)+(mx*8) + (y*640) + x1 + y1*640 + 3] = colours[(!!(b1&0x10))<<1 | !!(b2&0x10)];
+		b[(my*640*8)+(mx*8) + (y*640) + x1 + y1*640 + 4] = colours[(!!(b1&0x8))<<1 | !!(b2&0x8)];
+		b[(my*640*8)+(mx*8) + (y*640) + x1 + y1*640 + 5] = colours[(!!(b1&0x4))<<1 | !!(b2&0x4)];
+		b[(my*640*8)+(mx*8) + (y*640) + x1 + y1*640 + 6] = colours[(!!(b1&0x2))<<1 | !!(b2&0x2)];
+		b[(my*640*8)+(mx*8) + (y*640) + x1 + y1*640 + 7] = colours[(!!(b1&0x1))<<1 | !!(b2&0x1)];
+	}
+	}
+	}
+
+	// bg2(win) map 
+	x1 = 256+16;
+	y1 = 200;
+	for(my = 0; my < 32; my++)
+	{
+	for(mx = 0; mx < 32; mx++)
+	{
+	for(y = 0; y<8; y++)
+	{
+		unsigned char b1, b2, t;
+		int mapaddr = 0x9c00 + my*32 + mx;
+		int tileaddr;
+
+		t = mem_get_raw(mapaddr);
+
+		tileaddr = 0x8000 + t*16;
+		b1 = mem_get_raw(tileaddr+y*2);
+		b2 = mem_get_raw(tileaddr+y*2+1);
+		b[(my*640*8)+(mx*8) + (y*640) + x1 + y1*640 + 0] = colours[(!!(b1&0x80))<<1 | !!(b2&0x80)];
+		b[(my*640*8)+(mx*8) + (y*640) + x1 + y1*640 + 1] = colours[(!!(b1&0x40))<<1 | !!(b2&0x40)];
+		b[(my*640*8)+(mx*8) + (y*640) + x1 + y1*640 + 2] = colours[(!!(b1&0x20))<<1 | !!(b2&0x20)];
+		b[(my*640*8)+(mx*8) + (y*640) + x1 + y1*640 + 3] = colours[(!!(b1&0x10))<<1 | !!(b2&0x10)];
+		b[(my*640*8)+(mx*8) + (y*640) + x1 + y1*640 + 4] = colours[(!!(b1&0x8))<<1 | !!(b2&0x8)];
+		b[(my*640*8)+(mx*8) + (y*640) + x1 + y1*640 + 5] = colours[(!!(b1&0x4))<<1 | !!(b2&0x4)];
+		b[(my*640*8)+(mx*8) + (y*640) + x1 + y1*640 + 6] = colours[(!!(b1&0x2))<<1 | !!(b2&0x2)];
+		b[(my*640*8)+(mx*8) + (y*640) + x1 + y1*640 + 7] = colours[(!!(b1&0x1))<<1 | !!(b2&0x1)];
+	}
+	}
+	}
+}*/
+
 int lcd_cycle(void)
 {
-	int this_frame/*, subframe_cycles*/;
-	static int prev_line;
-	//char k[21];
+	int cycles = c.cycles;
+	int this_frame, subframe_cycles;
+	static int prev_line, prev_mode, prev_cycles;
+	static int /*draw_line,*/ drawn_pixels;
 
 	this_frame = c.cycles % (70224/4);
 	lcd_line = this_frame / (456/4);
+	subframe_cycles = this_frame % (456/4);
 
-	if(this_frame < 204/4)
+	if(subframe_cycles < 80/4)
 		lcd_mode = 2;
-	else if(this_frame < 284/4)
+	else if(subframe_cycles < 252/4)
 		lcd_mode = 3;
-	else if(this_frame < 456/4)
+	else if(subframe_cycles < 456/4)
 		lcd_mode = 0;
 	if(lcd_line >= 144)
 		lcd_mode = 1;
-		
-	if(lcd_line != prev_line && lcd_line < 144)
-		render_line(lcd_line);
 
+	/* Check if any STAT interrupts need to fire */
 	if(ly_int && lcd_line == lcd_ly_compare)
 		interrupt(INTR_LCDSTAT);
+	else if(hblank_int && lcd_mode == 0 && prev_mode != 0)
+		interrupt(INTR_LCDSTAT);
+	else if(vblank_int && lcd_mode == 1 && prev_mode != 1)
+		interrupt(INTR_LCDSTAT);
+	else if(oam_int && lcd_mode == 2 && prev_mode != 2)
+		interrupt(INTR_LCDSTAT);
+
+	{
+		int x/*, y*/;
+		//int delta;
+		//int start;
+
+		/* Actual x position of the 'real' LCD */
+		x = subframe_cycles*4 - 80;
+
+		/* New line has started, reset imaginary raster position and finish previous line if needed */
+		if(lcd_line != prev_line)
+		{
+			/* Line is unfinished and the current (prev_line) scanline is onscreen */
+			if(drawn_pixels < 160 && prev_line < 144)
+				render_line(prev_line, drawn_pixels, 160-drawn_pixels);
+			drawn_pixels = 0;
+		}
+
+		/* Imaginary raster position is onscreen, draw some pixels to catch up */
+		if(x > 0 && x < 160 && lcd_line < 144)
+		{
+//			printf(GREEN "%d %d %d %d\n" RESET, lcd_line, drawn_pixels, x - drawn_pixels, x);
+			render_line(lcd_line, drawn_pixels, x - drawn_pixels);
+			/* Update imaginary raster position to real raster position */
+			drawn_pixels = x;
+		}
+	}
 
 	/*if (timertime%256==0) {
 		dclear();
@@ -452,12 +577,18 @@ int lcd_cycle(void)
 	if(prev_line == 143 && lcd_line == 144)
 	{
 		//draw_stuff();
-		interrupt(INTR_VBLANK);
 		sdl_frame();
+		interrupt(INTR_VBLANK);
 		if(sdl_update())
 			return 0;
+		//memset(sdl_get_framebuffer(), 0x440022, 640*144*4);
 	}
+
 	prev_line = lcd_line;
+	prev_mode = lcd_mode;
+
+	prev_cycles = cycles;
+
 	return 1;
 }
 

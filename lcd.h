@@ -4,6 +4,9 @@
 struct lcd_config {
 	int lcd_line;
 	int lcd_ly_compare;
+	int oam_int;
+	int vblank_int;
+	int hblank_int;
 	int ly_int;
 	int lcd_mode;
 	int lcd_enabled;
@@ -36,6 +39,7 @@ void lcd_write_spr_palette2(unsigned char);
 void lcd_set_window_y(unsigned char);
 void lcd_set_window_x(unsigned char);
 void lcd_set_ly_compare(unsigned char);
+unsigned char lcd_get_ly_compare(void);
 void lcd_set_off(int x,int y);
 int lcd_get_xoff();
 int lcd_get_yoff();
