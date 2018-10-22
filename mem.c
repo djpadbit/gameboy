@@ -272,13 +272,13 @@ void mem_write_byte(unsigned short d, unsigned char i)
 	if(d >= 0xFF00) {                       // Top ram
 		topmem[d-0xFF00] = i;
 	} else if (d < 0xFEA0 && d >= 0xFE00) { // OAM memory
-		oammem[i-0xFE00] = i;
+		oammem[d-0xFE00] = i;
 	} else if (d < 0xFE00 && d >= 0xE000) { // Shadow work ram 
 		mainmem[d-0xE000] = i;
 	} else if (d < 0xE000 && d >= 0xC000) { // Work ram
 		mainmem[d-0xC000] = i;
 	} else if (d < 0xC000 && d >= 0xA000) { // External ram
-		extmem[i-0xA000] = i;
+		extmem[d-0xA000] = i;
 	} else if (d < 0xA000 && d >= 0x8000) { // Video ram
 		vmem[d-0x8000] = i;
 	}/* else if (d < 0x8000) {              // Cartradge rom
