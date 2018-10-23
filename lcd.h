@@ -24,6 +24,8 @@ struct lcd_config {
 	int sprpalette2[4];
 };
 
+extern int lcd_draw_enable;
+
 void lcd_get_conf(struct lcd_config *dst);
 void lcd_set_conf(struct lcd_config *src);
 int lcd_cycle(void);

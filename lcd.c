@@ -39,6 +39,9 @@ static int sprpalette2[] = {0, 1, 2, 3};
 static int xoff=29;
 static int yoff=0;
 
+int lcd_draw_enable = 1;
+
+
 static unsigned char scalearrx[160];
 static unsigned char scalearry[144];
 
@@ -540,7 +543,7 @@ int lcd_cycle(void)
 	else if(oam_int && lcd_mode == 2 && prev_mode != 2)
 		interrupt(INTR_LCDSTAT);
 
-	{
+	if (lcd_draw_enable) {
 		int x/*, y*/;
 		//int delta;
 		//int start;

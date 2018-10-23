@@ -162,7 +162,7 @@ unsigned short mem_get_word(unsigned short i)
 	return mem_get_raw(i) | (mem_get_raw(i+1)<<8);
 }
 
-void mem_write_raw(unsigned short d, unsigned char i)
+inline void mem_write_raw(unsigned short d, unsigned char i)
 {
 	if(d >= 0xFF00) {                       // Top ram
 		topmem[d-0xFF00] = i;

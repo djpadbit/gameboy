@@ -40,4 +40,6 @@ F4 - Reset scaling and offset to default
 
 F5 - Toggle debug display (numbers on the left)
 
+F6 - Toggle LCD Rendering
+
 The arrows control the game in mode 0, the offset in mode 1 and the scaling in mode 2

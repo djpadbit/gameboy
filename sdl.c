@@ -62,6 +62,9 @@ int sdl_update(void)
 				case KEY_F5:
 					debug_info = !debug_info;
 					break;
+				case KEY_F6:
+					lcd_draw_enable = !lcd_draw_enable;
+					break;
 				case KEY_SHIFT:
 					button_a = 1;
 					break;
