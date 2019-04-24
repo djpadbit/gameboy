@@ -1,3 +1,5 @@
+# I will no longer maintain FXGB as it is obselete and has been superseeded by [fxgnuboy](https://github.com/djpadbit/fxgnuboy)
+
 # FXGB
 ## This is not a real emulator but more of a POC
 FXGB is a port of a gameboy emulator (look at the source of the fork for original emulator) for the casio FX range of calculators.
